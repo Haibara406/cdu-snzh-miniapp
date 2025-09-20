@@ -1,6 +1,6 @@
 package com.snzh.mapper;
 
-import com.snzh.entity.AppUser;
+import com.snzh.domain.entity.AppUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

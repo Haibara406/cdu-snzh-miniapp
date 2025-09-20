@@ -1,6 +1,6 @@
 package com.snzh.service;
 
-import com.snzh.entity.FacilityType;
+import com.snzh.domain.entity.FacilityType;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

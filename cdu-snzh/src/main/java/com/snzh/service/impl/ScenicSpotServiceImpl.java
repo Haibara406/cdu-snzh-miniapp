@@ -1,6 +1,6 @@
 package com.snzh.service.impl;
 
-import com.snzh.entity.ScenicSpot;
+import com.snzh.domain.entity.ScenicSpot;
 import com.snzh.mapper.ScenicSpotMapper;
 import com.snzh.service.IScenicSpotService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

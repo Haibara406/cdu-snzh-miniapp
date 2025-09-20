@@ -1,6 +1,6 @@
 package com.snzh.service.impl;
 
-import com.snzh.entity.Facility;
+import com.snzh.domain.entity.Facility;
 import com.snzh.mapper.FacilityMapper;
 import com.snzh.service.IFacilityService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

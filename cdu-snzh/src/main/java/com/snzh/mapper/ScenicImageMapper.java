@@ -1,6 +1,6 @@
 package com.snzh.mapper;
 
-import com.snzh.entity.ScenicImage;
+import com.snzh.domain.entity.ScenicImage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

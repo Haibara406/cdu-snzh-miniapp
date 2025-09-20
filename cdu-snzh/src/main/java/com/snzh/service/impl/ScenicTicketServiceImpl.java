@@ -1,6 +1,6 @@
 package com.snzh.service.impl;
 
-import com.snzh.entity.ScenicTicket;
+import com.snzh.domain.entity.ScenicTicket;
 import com.snzh.mapper.ScenicTicketMapper;
 import com.snzh.service.IScenicTicketService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

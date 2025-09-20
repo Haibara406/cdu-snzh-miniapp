@@ -1,6 +1,6 @@
 package com.snzh.service;
 
-import com.snzh.entity.AppUser;
+import com.snzh.domain.entity.AppUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

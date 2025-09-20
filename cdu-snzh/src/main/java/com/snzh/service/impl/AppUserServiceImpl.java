@@ -1,6 +1,6 @@
 package com.snzh.service.impl;
 
-import com.snzh.entity.AppUser;
+import com.snzh.domain.entity.AppUser;
 import com.snzh.mapper.AppUserMapper;
 import com.snzh.service.IAppUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

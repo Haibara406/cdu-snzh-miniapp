@@ -1,6 +1,6 @@
 package com.snzh.mapper;
 
-import com.snzh.entity.TicketType;
+import com.snzh.domain.entity.TicketType;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

@@ -1,6 +1,6 @@
 package com.snzh.service.impl;
 
-import com.snzh.entity.TicketType;
+import com.snzh.domain.entity.TicketType;
 import com.snzh.mapper.TicketTypeMapper;
 import com.snzh.service.ITicketTypeService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

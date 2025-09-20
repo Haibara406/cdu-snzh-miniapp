@@ -1,6 +1,6 @@
 package com.snzh.service;
 
-import com.snzh.entity.ScenicImage;
+import com.snzh.domain.entity.ScenicImage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

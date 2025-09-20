@@ -1,6 +1,6 @@
 package com.snzh.service;
 
-import com.snzh.entity.ScenicTicket;
+import com.snzh.domain.entity.ScenicTicket;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
