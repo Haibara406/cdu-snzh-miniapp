@@ -1,1 +1,97 @@
-spring.application.name=cdu-snzh
+server:
+  port: 8062
+
+spring:
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cdu_snzh_miniapp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    type: com.zaxxer.hikari.HikariDataSource
+  data:
+    redis:
+      host: 8.156.75.132
+      port: 6379
+      database: 0
+      timeout: 10s
+      password: Ww249260523..
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 10s
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.snzh
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+minio:
+  endpoint: http://8.156.75.132:9000
+  accessKey: haibara
+  secretKey: Ww249260523..
+  bucketName: cdu-snzh-miniapp
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.snzh: debug
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      # id 自增
+      id-type: auto
+
+snzh:
+  wechat:
+    appid: wxbc43db1ef4db8827
+    secret: 03c8c9e86330e8ed7e0edae80d794756
+    mchid: 1561414331
+    mchSerialNo: 4B3B3DC35414AD50B1B755BAF8DE9CC7CF407606
+    privateKeyFilePath: D:\apiclient_key.pem
+    apiV3Key: CZBK51236435wxpay435434323FFDuv3
+    weChatPayCertFilePath: D:\wechatpay_166D96F876F45C7D07CE98952A96EC980368ACFC.pem
+    notifyUrl: https://www.weixin.qq.com/wxpay/pay.php
+    refundNotifyUrl: https://www.weixin.qq.com/wxpay/pay.php
+  gaode:
+    address: https://restapi.amap.com/v3
+    key: 99014055e07f33fbc1d67e49a650640f
+    timeout: 5000
+    connect-timeout: 3000
+    static-map:
+      height: 300
+      width: 400
+      zoom: 14
+  jwt:
+    access-token-expire: 3600
+    refresh-token-expire: 604800
+    secret:
