@@ -67,4 +67,33 @@ public class ErrorConst {
 
     /** 距离计算异常 */
     public static final String CALCULATE_DISTANCE_EXCEPTION = "距离计算异常: %s";
+
+    /** 用户不存在或已禁用 */
+    public static final String USER_NOT_EXIST_OR_BANNED = "用户不存在或已禁用";
+
+    /** Token无效或已过期 */
+    public static final String INVALID_TOKEN = "Token无效或已过期";
+
+    /** 缺少Token */
+    public static final String NEED_TOKEN = "缺少Token";
+
+    /** token已过期，请重新登录 */
+    public static final String TOKEN_EXPIRED = "token已过期，请重新登录";
+
+    /** 账户已被锁定 */
+    public static final String ACCOUNT_LOCKED = "账户已被锁定";
+
+    /** 登陆失败 */
+    public static final String LOGIN_FAILED = "登陆失败";
+
+    /** 数据不存在 */
+    public static final String DATA_NOT_FOUND = "数据不存在";
+
+    /** 账户不存在 */
+    public static final String ACCOUNT_NOT_FOUND = "账户不存在";
+
+    /** 获取手机号失败 */
+    public static final String GET_PHONE_NUMBER_ERROR = "获取手机号失败";
+
+
 }

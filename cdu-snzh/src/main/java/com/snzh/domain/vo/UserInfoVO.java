@@ -1,37 +1,32 @@
-package com.snzh.domain.entity;
+package com.snzh.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serial;
-import java.io.Serializable;
-
-import com.snzh.domain.base.BaseTableData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * @author haibara
- * @description 基础设施表
- * @since 2025/9/20 15:34
+ * @description 用户信息 vo
+ * @since 2025/9/20 18:46
  */
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("app_user")
-@Schema(description = "用户实体类")
-public class AppUser extends BaseTableData implements Serializable {
+@Schema(description = "用户信息响应VO")
+public class UserInfoVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "用户ID")
     private Long id;
-
-    @Schema(description = "微信openid")
-    private String openid;
 
     @Schema(description = "昵称")
     private String nickname;
@@ -42,7 +37,7 @@ public class AppUser extends BaseTableData implements Serializable {
     @Schema(description = "手机号")
     private String phone;
 
-    @Schema(description = "性别（0未知 1男 2女）")
+    @Schema(description = "性别（0女 1男）")
     private Integer gender;
 
     @Schema(description = "身份证号")
@@ -50,4 +45,7 @@ public class AppUser extends BaseTableData implements Serializable {
 
     @Schema(description = "真实姓名")
     private String realName;
+
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
 }

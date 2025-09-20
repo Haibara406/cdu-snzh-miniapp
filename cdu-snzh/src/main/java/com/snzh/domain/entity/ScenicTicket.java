@@ -1,20 +1,16 @@
 package com.snzh.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.snzh.domain.base.BaseTableData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 
 /**
@@ -23,7 +19,7 @@ import java.time.LocalDateTime;
  * @since 2025/9/20 15:34
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("scenic_ticket")

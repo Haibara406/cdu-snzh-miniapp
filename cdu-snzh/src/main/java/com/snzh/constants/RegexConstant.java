@@ -36,7 +36,6 @@ public class RegexConstant {
      * URL正则表达式
      */
     public static final String REGEX_URL = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-
     /**
      * 汉字正则表达式
      */

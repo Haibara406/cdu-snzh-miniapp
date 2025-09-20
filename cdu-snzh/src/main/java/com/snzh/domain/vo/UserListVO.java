@@ -1,28 +1,28 @@
-package com.snzh.domain.entity;
+package com.snzh.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serial;
-import java.io.Serializable;
-
-import com.snzh.domain.base.BaseTableData;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * @author haibara
- * @description 基础设施表
- * @since 2025/9/20 15:34
+ * @description 用户集合返回 vo
+ * @since 2025/9/20 21:57
  */
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("app_user")
-@Schema(description = "用户实体类")
-public class AppUser extends BaseTableData implements Serializable {
+@Schema(description = "返回用户列表")
+public class UserListVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -50,4 +50,15 @@ public class AppUser extends BaseTableData implements Serializable {
 
     @Schema(description = "真实姓名")
     private String realName;
+
+    @Schema(description = "状态:0-禁用,1-正常")
+    private Integer status;
+
+    @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
+
+    @Schema(description = "更新时间")
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
 }

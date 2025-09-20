@@ -3,7 +3,10 @@ package com.snzh.domain.base;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -14,6 +17,9 @@ import java.util.Date;
  * @since 2025/9/20 09:59
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BaseTableData {
 
     @Schema(description = "状态:0-禁用,1-正常")

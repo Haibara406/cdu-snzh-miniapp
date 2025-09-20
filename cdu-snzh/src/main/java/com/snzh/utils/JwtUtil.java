@@ -43,9 +43,10 @@ public class JwtUtil {
     /**
      * 生成 Access Token
      */
-    public String generateAccessToken(String userId) {
+    public String generateAccessToken(String userId, String status) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
+        claims.put("status", status);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -97,6 +98,12 @@ public class JwtUtil {
         }
     }
 
+    public String getUserId(String token) {
+        return parseToken(token).get("userId", String.class);
+    }
 
+    public String getStatus(String token) {
+        return parseToken(token).get("status", String.class);
+    }
 }
 
