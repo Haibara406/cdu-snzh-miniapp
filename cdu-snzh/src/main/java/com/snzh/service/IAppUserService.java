@@ -39,7 +39,7 @@ public interface IAppUserService extends IService<AppUser> {
 
     PageVo<UserListVO> getUserOrSearch(@Valid UserSearchDTO userSearchDTO);
 
-    ResponseResult<Void> updateStatus(@NotNull(message = ValidationConstants.USER_ID_NOT_NULL) Long id,
+    boolean updateStatus(@NotNull(message = ValidationConstants.USER_ID_NOT_NULL) Long id,
                                       @Min(value = 0, message =  ValidationConstants.INCORRECT_STATUS_VALUE)
                                       @Max(value = 1, message =  ValidationConstants.INCORRECT_STATUS_VALUE) Integer status);
 }

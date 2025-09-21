@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.snzh.constants.ErrorConst;
-import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.UserInfoUpdateDTO;
 import com.snzh.domain.dto.UserSearchDTO;
 import com.snzh.domain.dto.WxLoginDTO;
@@ -35,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -112,6 +110,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
             throw new AccountNotFoundException(ErrorConst.ACCOUNT_NOT_FOUND);
         }
         BeanUtil.copyProperties(userInfoUpdateDTO, appUser, true);
+        appUser.setId(userId);
 
         return updateById(appUser);
     }
@@ -167,7 +166,9 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
             wrapper.like(StringUtils.isNotEmpty(userSearchDTO.getNickname()), AppUser::getNickname, userSearchDTO.getNickname())
                     .like(StringUtils.isNotEmpty(userSearchDTO.getRealName()), AppUser::getRealName, userSearchDTO.getRealName())
                     .eq(StringUtils.isNotNull(userSearchDTO.getStatus()), AppUser::getStatus, userSearchDTO.getStatus());
-            if(StringUtils.isNotNull(userSearchDTO.getCreateTimeStart()) && StringUtils.isNotNull(userSearchDTO.getCreateTimeEnd())){
+            if(StringUtils.isNotNull(userSearchDTO.getCreateTimeStart())
+                    && StringUtils.isNotNull(userSearchDTO.getCreateTimeEnd())
+                    && userSearchDTO.getCreateTimeStart().before(userSearchDTO.getCreateTimeEnd())){
                 wrapper.between(AppUser::getCreateTime, userSearchDTO.getCreateTimeStart(), userSearchDTO.getCreateTimeEnd());
             }
         }
@@ -177,12 +178,16 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
-    public ResponseResult<Void> updateStatus(Long id, Integer status) {
+    public boolean updateStatus(Long id, Integer status) {
+        if(!userMapper.exists(Wrappers.lambdaQuery(AppUser.class).eq(AppUser::getId, id))){
+            throw new AccountNotFoundException(ErrorConst.ACCOUNT_NOT_FOUND);
+        }
+
         AppUser user = AppUser.builder()
                 .status(status)
                 .id(id)
                 .build();
 
-        return updateById(user) ? ResponseResult.success() : ResponseResult.failure();
+        return updateById(user);
     }
 }
