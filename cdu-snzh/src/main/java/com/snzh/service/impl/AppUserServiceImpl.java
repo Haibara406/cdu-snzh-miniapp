@@ -5,6 +5,7 @@ import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.snzh.constants.ErrorConst;
 import com.snzh.domain.ResponseResult;
@@ -14,6 +15,7 @@ import com.snzh.domain.dto.WxLoginDTO;
 import com.snzh.domain.dto.WxPhoneDTO;
 import com.snzh.domain.entity.AppUser;
 import com.snzh.domain.properties.JwtProperties;
+import com.snzh.domain.vo.PageVo;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -26,6 +28,7 @@ import com.snzh.redis.RedisKeyBuild;
 import com.snzh.service.IAppUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.snzh.utils.JwtUtil;
+import com.snzh.utils.PageUtil;
 import com.snzh.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,7 +159,9 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
-    public List<UserListVO> getUserOrSearch(UserSearchDTO userSearchDTO) {
+    public PageVo<UserListVO> getUserOrSearch(UserSearchDTO userSearchDTO) {
+
+        IPage<AppUser> page = PageUtil.getPageParams(userSearchDTO);
         LambdaQueryWrapper<AppUser> wrapper = new LambdaQueryWrapper<>();
         if(userSearchDTO != null){
             wrapper.like(StringUtils.isNotEmpty(userSearchDTO.getNickname()), AppUser::getNickname, userSearchDTO.getNickname())
@@ -166,11 +171,9 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
                 wrapper.between(AppUser::getCreateTime, userSearchDTO.getCreateTimeStart(), userSearchDTO.getCreateTimeEnd());
             }
         }
-        return userMapper
-                .selectList(wrapper)
-                .stream()
-                .map(user -> BeanUtil.copyProperties(user, UserListVO.class))
-                .toList();
+
+        IPage<AppUser> userPage = userMapper.selectPage(page, wrapper);
+        return PageUtil.convertPage(userPage, user -> BeanUtil.copyProperties(user, UserListVO.class));
     }
 
     @Override

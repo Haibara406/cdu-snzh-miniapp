@@ -8,6 +8,7 @@ import com.snzh.domain.dto.WxLoginDTO;
 import com.snzh.domain.dto.WxPhoneDTO;
 import com.snzh.domain.entity.AppUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.snzh.domain.vo.PageVo;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -36,7 +37,7 @@ public interface IAppUserService extends IService<AppUser> {
 
     UserInfoVO getUserInfo(Long userId);
 
-    List<UserListVO> getUserOrSearch(@Valid UserSearchDTO userSearchDTO);
+    PageVo<UserListVO> getUserOrSearch(@Valid UserSearchDTO userSearchDTO);
 
     ResponseResult<Void> updateStatus(@NotNull(message = ValidationConstants.USER_ID_NOT_NULL) Long id,
                                       @Min(value = 0, message =  ValidationConstants.INCORRECT_STATUS_VALUE)

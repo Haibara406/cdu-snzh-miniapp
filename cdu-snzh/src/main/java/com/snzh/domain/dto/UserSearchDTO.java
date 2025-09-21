@@ -21,7 +21,7 @@ import java.util.Date;
 
 @Data
 @Schema(description = "搜索用户列表请求")
-public class UserSearchDTO implements Serializable {
+public class UserSearchDTO extends BasePageDto implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

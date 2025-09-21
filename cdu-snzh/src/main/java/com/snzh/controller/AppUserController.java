@@ -2,6 +2,7 @@ package com.snzh.controller;
 
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.*;
+import com.snzh.domain.vo.PageVo;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -71,13 +72,13 @@ public class AppUserController {
 
     @Operation(summary = "搜索用户列表", description = "管理端搜索用户列表")
     @PostMapping("/search")
-    public ResponseResult<List<UserListVO>> searchUserList(@RequestBody @Valid UserSearchDTO userSearchDTO){
+    public ResponseResult<PageVo<UserListVO>> searchUserList(@RequestBody @Valid UserSearchDTO userSearchDTO){
         return ResponseResult.success(userService.getUserOrSearch(userSearchDTO));
     }
 
     @Operation(summary = "获取用户列表", description = "管理端获取用户列表")
     @GetMapping("/list")
-    public ResponseResult<List<UserListVO>> getUserList() {
+    public ResponseResult<PageVo<UserListVO>> getUserList() {
         return ResponseResult.success(userService.getUserOrSearch(null));
     }
 
