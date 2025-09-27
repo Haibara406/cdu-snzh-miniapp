@@ -1,38 +1,36 @@
-package com.snzh.domain.entity;
+package com.snzh.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.snzh.domain.base.BaseTableData;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
-
-
+import java.time.LocalDateTime;
 
 /**
  * @author haibara
- * @description 基础设施表
- * @since 2025/9/20 15:37
+ * @description 设施信息 vo
+ * @since 2025/9/21 19:11
  */
+
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("facility")
-@Schema(description = "基础设施实体类")
-public class Facility  extends BaseTableData implements Serializable {
+@Accessors(chain = true)
+@Schema(description = "设施信息")
+public class FacilityVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "设施ID")
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "设施类型ID")
@@ -58,4 +56,13 @@ public class Facility  extends BaseTableData implements Serializable {
 
     @Schema(description = "联系电话")
     private String contactPhone;
+
+    @Schema(description = "状态:0-禁用,1-正常")
+    private Integer status;
+
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
+
+    @Schema(description = "更新时间")
+    private LocalDateTime updateTime;
 }

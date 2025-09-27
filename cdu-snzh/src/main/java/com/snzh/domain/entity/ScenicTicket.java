@@ -1,5 +1,7 @@
 package com.snzh.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.snzh.domain.base.BaseTableData;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +32,7 @@ public class ScenicTicket  extends BaseTableData implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID")
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "景点ID")

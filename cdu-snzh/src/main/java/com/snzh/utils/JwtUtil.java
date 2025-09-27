@@ -4,6 +4,7 @@ import com.snzh.domain.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -20,17 +21,17 @@ import java.util.Map;
  */
 
 @Component
+@RequiredArgsConstructor
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtUtil {
 
-    @Value("${snzh.jwt.secret}")
-    private String secret;
+    private final JwtProperties jwtProperties;
 
-    @Value("${snzh.jwt.access-expire}")
-    private long accessTokenExpire;
+    private final String secret = jwtProperties.getSecret();
 
-    @Value("${snzh.jwt.refresh-expire}")
-    private long refreshTokenExpire;
+    private final long accessTokenExpire = jwtProperties.getAccessTokenExpire();
+
+    private final long refreshTokenExpire = jwtProperties.getRefreshTokenExpire();
 
     private SecretKey key;
 

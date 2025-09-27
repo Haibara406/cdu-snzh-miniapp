@@ -95,5 +95,22 @@ public class ErrorConst {
     /** 获取手机号失败 */
     public static final String GET_PHONE_NUMBER_ERROR = "获取手机号失败";
 
+    /** 基础设施类型不存在 */
+    public static final String FACILITY_TYPE_NOT_FOUND = "基础设施类型不存在";
+
+    /** 基础设施类型已存在 */
+    public static final String FACILITY_TYPE_HAS_EXIST = "基础设施类型已存在";
+
+    public static final String FACILITY_NOT_FOUND = "基础设施不存在";
+
+    public static final String FACILITY_ID_NOT_NULL = "基础设施id不能为空";
+
+    public static final String NAVIGATION_FAILED = "导航路径获取失败";
+
+    public static final String ROUTE_PLAN_ERROR = "路径规划异常";
+
+    public static final String CALCULATE_DISTANCE_ERROR = "距离计算异常";
+
+    public static final String FACILITY_HAS_EXIST = "基础设施已存在";
 
 }

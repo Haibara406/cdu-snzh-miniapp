@@ -6,15 +6,12 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-
 import com.snzh.constants.ErrorConst;
 import com.snzh.constants.MapConstant;
-
 import com.snzh.domain.properties.GaodeMapProperties;
 import com.snzh.exceptions.MapServerException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -31,33 +28,25 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @EnableConfigurationProperties(GaodeMapProperties.class)
 public class GaodeMapUtil {
 
-    // TODO 写在配置文件
-    @Value("${miniapp.gaode.key:99014055e07f33fbc1d67e49a650640f}")
-    private String key;
+    private final GaodeMapProperties gaodeMapProperties;
 
-    @Value("${miniapp.gaode.address:https://restapi.amap.com/v3}")
-    private String address;
+    private final String key = gaodeMapProperties.getKey();
 
-    @Value("${miniapp.gaode.timeout:5000}")
-    private Integer timeout;
+    private final String address = gaodeMapProperties.getAddress();
 
-    @Value("${miniapp.gaode.connect-timeout:3000}")
-    private Integer connectTimeout;
+    private final Integer timeout = gaodeMapProperties.getTimeout();
 
-    @Value("${miniapp.gaode.static-map-zoom:14}")
-    private Integer staticMapZoom;
+    private final Integer connectTimeout = gaodeMapProperties.getConnectTimeout();
 
-    @Value("${miniapp.gaode.static-map-width:400}")
-    private Integer staticMapWidth;
+    private final Integer staticMapZoom = gaodeMapProperties.getStaticMap().getZoom();
 
-    @Value("${miniapp.gaode.static-map-height:300}")
-    private Integer staticMapHeight;
+    private final Integer staticMapWidth = gaodeMapProperties.getStaticMap().getWidth();
 
-    public GaodeMapUtil() {
-    }
+    private final Integer staticMapHeight = gaodeMapProperties.getStaticMap().getHeight();
 
     /**
      * 地理编码 - 地址转经纬度
@@ -135,7 +124,8 @@ public class GaodeMapUtil {
      * @param type           出行方式：0-驾车，1-步行，2-公交，3-骑行
      * @return 路径规划结果，包含距离、时间等信息
      */
-    public Map<String, Object> routePlanning(String startLongitude, String startLatitude,
+    // TODO 待优化
+    public JSONObject routePlanning(String startLongitude, String startLatitude,
                                              String endLongitude, String endLatitude, int type) {
         try {
             String origin = startLongitude + "," + startLatitude;
@@ -163,26 +153,22 @@ public class GaodeMapUtil {
                 throw new MapServerException(String.format(ErrorConst.ROUTE_PLANNING_REQUEST_FAILED, result.getStr("info")));
             }
 
-            Map<String, Object> routeInfo = new HashMap<>();
-            JSONObject route = result.getJSONObject("route");
-
-            // 驾车/步行/骑行
-            if (type == 0 || type == 1 || type == 3) {
-                if (!route.getJSONArray("paths").isEmpty()) {
-                    JSONObject path = route.getJSONArray("paths").getJSONObject(0);
-                    routeInfo.put("distance", path.getInt("distance"));
-                    routeInfo.put("duration", path.getInt("duration"));
-                }
-                // 公交
-            } else if (type == 2) {
-                if (!route.getJSONArray("transits").isEmpty()) {
-                    JSONObject transit = route.getJSONArray("transits").getJSONObject(0);
-                    routeInfo.put("distance", transit.getInt("distance"));
-                    routeInfo.put("duration", transit.getInt("duration"));
-                }
-            }
-
-            return routeInfo;
+//            // 驾车/步行/骑行
+//            if (type == 0 || type == 1 || type == 3) {
+//                if (!route.getJSONArray("paths").isEmpty()) {
+//                    JSONObject path = route.getJSONArray("paths").getJSONObject(0);
+//                    routeInfo.put("distance", path.getInt("distance"));
+//                    routeInfo.put("duration", path.getInt("duration"));
+//                }
+//                // 公交
+//            } else if (type == 2) {
+//                if (!route.getJSONArray("transits").isEmpty()) {
+//                    JSONObject transit = route.getJSONArray("transits").getJSONObject(0);
+//                    routeInfo.put("distance", transit.getInt("distance"));
+//                    routeInfo.put("duration", transit.getInt("duration"));
+//                }
+//            }
+            return result;
         } catch (Exception e) {
             log.error("路径规划异常", e);
             throw new MapServerException("路径规划异常: " + e.getMessage());
@@ -300,7 +286,7 @@ public class GaodeMapUtil {
      * @param type           计算方式
      * @return 距离，单位米
      */
-    public int calculateDistance(String startLongitude, String startLatitude,
+    public JSONObject calculateDistance(String startLongitude, String startLatitude,
                                  String endLongitude, String endLatitude, int type) {
         try {
             String origins = startLongitude + "," + startLatitude;
@@ -327,11 +313,10 @@ public class GaodeMapUtil {
                 throw new MapServerException(String.format(ErrorConst.CALCULATE_DISTANCE_REQUEST_FAILED, result.getStr("info")));
             }
 
-            if (!result.getJSONArray("results").isEmpty()) {
-                JSONObject distanceResult = result.getJSONArray("results").getJSONObject(0);
-                return distanceResult.getInt("distance");
+            if (result.getJSONArray("results").isEmpty()) {
+                throw new MapServerException(String.format(ErrorConst.CALCULATE_DISTANCE_REQUEST_FAILED, result.getStr("info")));
             }
-            return 0;
+            return result.getJSONArray("results").getJSONObject(0);
         } catch (Exception e) {
             log.error("距离计算异常", e);
             throw new MapServerException("距离计算异常: " + e.getMessage());

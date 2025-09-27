@@ -1,5 +1,7 @@
 package com.snzh.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serial;
 import java.io.Serializable;
@@ -28,6 +30,7 @@ public class AppUser extends BaseTableData implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "用户ID")
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "微信openid")

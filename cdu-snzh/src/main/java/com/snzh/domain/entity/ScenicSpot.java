@@ -1,5 +1,7 @@
 package com.snzh.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serial;
@@ -30,6 +32,7 @@ public class ScenicSpot  extends BaseTableData implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "景点ID")
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     @Schema(description = "景点名称")
