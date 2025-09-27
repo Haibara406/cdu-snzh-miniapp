@@ -8,6 +8,7 @@ import com.snzh.domain.vo.PageVo;
 import com.snzh.service.IFacilityTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -43,7 +44,7 @@ public class FacilityTypeController {
 
     @GetMapping("/page")
     @Operation(summary = "分页查询设施类型列表", description = "支持按名称等条件筛选")
-    public ResponseResult<PageVo<FacilityTypeVO>> getTypePage(@Validated FacilityTypeQueryDTO queryDTO) {
+    public ResponseResult<PageVo<FacilityTypeVO>> getTypePage(@Valid FacilityTypeQueryDTO queryDTO) {
         log.info("分页查询设施类型列表 {}", queryDTO);
         return ResponseResult.success(facilityTypeService.getTypePage(queryDTO));
     }
@@ -55,16 +56,16 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.getTypeById(id));
     }
 
-    @PostMapping
+    @PostMapping("/add")
     @Operation(summary = "新增设施类型", description = "添加新的设施类型")
-    public ResponseResult<Long> addType(@Validated @RequestBody FacilityTypeSaveDTO saveDTO) {
+    public ResponseResult<Long> addType(@Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
         log.info("新增设施类型 {}", saveDTO);
         return ResponseResult.success(facilityTypeService.addType(saveDTO));
     }
 
     @PutMapping("/update/{id}")
     @Operation(summary = "修改设施类型", description = "更新设施类型信息")
-    public ResponseResult<Boolean> updateType(@PathVariable("id")  Long id, @Validated @RequestBody FacilityTypeSaveDTO saveDTO) {
+    public ResponseResult<Boolean> updateType(@PathVariable("id")  Long id, @Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
         log.info("修改id为{}设施类型 : {}", id, saveDTO);
         return ResponseResult.success(facilityTypeService.updateType(id, saveDTO));
     }

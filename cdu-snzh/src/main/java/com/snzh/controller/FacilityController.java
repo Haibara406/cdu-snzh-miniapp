@@ -12,10 +12,10 @@ import com.snzh.domain.vo.PageVo;
 import com.snzh.service.IFacilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,21 +60,21 @@ public class FacilityController {
 
     @PostMapping("/navigation-url")
     @Operation(summary = "生成导航URL", description = "根据设施ID和导航类型生成高德地图导航URL")
-    public ResponseResult<String> getNavigationUrl(@Validated @RequestBody FacilityMapRequestDTO request) {
+    public ResponseResult<String> getNavigationUrl(@Valid @RequestBody FacilityMapRequestDTO request) {
         String navigationUrl = facilityService.getNavigationUrl(request);
         return ResponseResult.success(navigationUrl);
     }
 
     @PostMapping("/route-planning")
     @Operation(summary = "获取路径规划", description = "获取从用户位置到设施的路径规划信息")
-    public ResponseResult<JSONObject> getRoutePlanning(@Validated @RequestBody FacilityMapRequestDTO request) {
+    public ResponseResult<JSONObject> getRoutePlanning(@Valid @RequestBody FacilityMapRequestDTO request) {
         JSONObject response = facilityService.getRoutePlanning(request);
         return ResponseResult.success(response);
     }
 
     @PostMapping("/calculate-distance")
     @Operation(summary = "计算距离", description = "计算用户位置到设施的距离")
-    public ResponseResult<CalculateDistanceMapVO> calculateDistance(@Validated @RequestBody FacilityMapRequestDTO request) {
+    public ResponseResult<CalculateDistanceMapVO> calculateDistance(@Valid @RequestBody FacilityMapRequestDTO request) {
         CalculateDistanceMapVO response = facilityService.calculateDistance(request);
         return ResponseResult.success(response);
     }
@@ -85,7 +85,7 @@ public class FacilityController {
             @NotNull @RequestParam("longitude") String longitude,
             @NotNull @RequestParam("latitude") String latitude,
             @RequestParam(value = "radius", required = false) Integer radius,
-            @NotNull @RequestParam(value = "type", required = false) String type,
+            @NotNull @RequestParam(value = "type") String type,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "limit", required = false) Integer limit) {
 
@@ -98,27 +98,27 @@ public class FacilityController {
     // -----------------------------管理端-------------------------------------
     @GetMapping("/page")
     @Operation(summary = "分页查询设施列表", description = "支持按名称、类型等条件筛选")
-    public ResponseResult<PageVo<FacilityVO>> getFacilityPage(@Validated FacilityQueryDTO queryDTO) {
+    public ResponseResult<PageVo<FacilityVO>> getFacilityPage(@Valid FacilityQueryDTO queryDTO) {
         PageVo<FacilityVO> page = facilityService.getFacilityPage(queryDTO);
         return ResponseResult.success(page);
     }
 
-    @PostMapping
+    @PostMapping("/add")
     @Operation(summary = "新增设施", description = "添加新的设施信息")
-    public ResponseResult<Long> addFacility(@Validated @RequestBody FacilitySaveDTO saveDTO) {
+    public ResponseResult<Long> addFacility(@Valid @RequestBody FacilitySaveDTO saveDTO) {
         Long id = facilityService.addFacility(saveDTO);
         return ResponseResult.success(id);
     }
 
     @PutMapping("/update/{id}")
     @Operation(summary = "修改设施", description = "更新设施信息")
-    public ResponseResult<Boolean> updateFacility(@PathVariable("id")  Long id, @Validated @RequestBody FacilitySaveDTO saveDTO) {
+    public ResponseResult<Boolean> updateFacility(@PathVariable("id")  Long id, @Valid @RequestBody FacilitySaveDTO saveDTO) {
         Boolean success = facilityService.updateFacility(id, saveDTO);
         return ResponseResult.success(success);
     }
 
     @DeleteMapping("/batch/delete")
-    @Operation(summary = "批量删除设施", description = "批量逻辑删除设施")
+    @Operation(summary = "批量删除设施", description = "批量删除设施")
     public ResponseResult<Boolean> batchDeleteFacility(@RequestBody List<Long> ids) {
         boolean success = facilityService.deleteByIds(ids);
         return ResponseResult.success(success);
