@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -42,4 +44,6 @@ public interface IAppUserService extends IService<AppUser> {
     boolean updateStatus(@NotNull(message = ValidationConstants.USER_ID_NOT_NULL) Long id,
                                       @Min(value = 0, message =  ValidationConstants.INCORRECT_STATUS_VALUE)
                                       @Max(value = 1, message =  ValidationConstants.INCORRECT_STATUS_VALUE) Integer status);
+
+    Boolean uploadAvatar(MultipartFile file, @Length(min = 1, max = 20, message = "照片名称长度为1-20个字符") String name);
 }

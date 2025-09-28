@@ -13,7 +13,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * <p>
@@ -54,6 +56,17 @@ public class AppUserController {
         Long userId = Long.valueOf(UserContext.get("userId"));
         return ResponseResult.success(userService.bindWxPhone(userId, wxPhoneDTO));
     }
+
+    @PostMapping("/upload/avatar")
+    @Operation(summary = "上传用户头像", description = "用户上传头像")
+    public ResponseResult<Boolean> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("name") @Length(min = 1, max = 20, message = "照片名称长度为1-20个字符") String name
+    ){
+        return ResponseResult.success(userService.uploadAvatar(file, name));
+    }
+
+
 
     // ----------------------- 管理端 -------------------------------
     @GetMapping("/info/{userId}")

@@ -20,12 +20,15 @@ import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
+import com.snzh.enums.UploadEnum;
 import com.snzh.exceptions.*;
 import com.snzh.mapper.AppUserMapper;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
 import com.snzh.service.IAppUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.snzh.threadlocal.UserContext;
+import com.snzh.utils.FileUploadUtils;
 import com.snzh.utils.JwtUtil;
 import com.snzh.utils.PageUtil;
 import com.snzh.utils.StringUtils;
@@ -33,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.concurrent.TimeUnit;
 
@@ -54,6 +58,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     private final JwtUtil jwtUtil;
     private final WxMaService wxMaService;
     private final JwtProperties jwtProperties;
+    private final FileUploadUtils fileUploadUtils;
 
 
     @Override
@@ -189,5 +194,29 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
                 .build();
 
         return updateById(user);
+    }
+
+    @Override
+    public Boolean uploadAvatar(MultipartFile file, String name) {
+        Long userId = UserContext.get("userId");
+        if(userId == null){
+            throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
+        }
+        AppUser appUser = userMapper.selectOne(Wrappers.lambdaQuery(AppUser.class).eq(AppUser::getId, userId));
+        if(appUser == null){
+            throw new AccountNotFoundException(ErrorConst.ACCOUNT_NOT_FOUND);
+        }
+        try{
+            String avatarUrl = fileUploadUtils.upload(UploadEnum.USER_AVATAR, file, name);
+            appUser.setAvatar(avatarUrl);
+            userMapper.updateById(appUser);
+            return true;
+        }catch (FileUploadException e){
+            log.error("{}上传失败", UploadEnum.USER_AVATAR.getDescription(), e);
+            return false;
+        }catch (Exception e){
+            log.error("{}上传出现未知异常", UploadEnum.USER_AVATAR.getDescription(), e);
+            return false;
+        }
     }
 }
