@@ -22,7 +22,6 @@ public class FacilitySaveDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = ValidationConstants.FACILITY_TYPE_ID_NOT_NULL)
     @Schema(description = "设施类型ID")
     private Integer facilityTypeId;
 

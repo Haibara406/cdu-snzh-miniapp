@@ -22,13 +22,15 @@ public class FacilityMapRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "用户当前位置经度")
-    @DecimalMin(value = "73.66", message = "经度超出中国范围")
-    @DecimalMax(value = "135.05", message = "经度超出中国范围")
+    @NotNull(message = ValidationConstants.LONGITUDE_NOT_NULL)
+    @DecimalMin(value = "73.66", message = ValidationConstants.LONGITUDE_EXCEEDS_CHINA)
+    @DecimalMax(value = "135.05", message = ValidationConstants.LONGITUDE_EXCEEDS_CHINA)
     private String userLongitude;
 
     @Schema(description = "用户当前位置纬度")
-    @DecimalMin(value = "3.86", message = "纬度超出中国范围")
-    @DecimalMax(value = "53.55", message = "纬度超出中国范围")
+    @NotNull(message = ValidationConstants.LATITUDE_NOT_NULL)
+    @DecimalMin(value = "3.86", message = ValidationConstants.LATITUDE_EXCEEDS_CHINA)
+    @DecimalMax(value = "53.55", message = ValidationConstants.LATITUDE_EXCEEDS_CHINA)
     private String userLatitude;
 
     @NotNull(message = ValidationConstants.FACILITY_ID_NOT_NULL)
