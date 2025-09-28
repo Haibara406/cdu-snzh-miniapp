@@ -63,16 +63,16 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.addType(saveDTO));
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/update")
     @Operation(summary = "修改设施类型", description = "更新设施类型信息")
-    public ResponseResult<Boolean> updateType(@PathVariable("id")  Long id, @Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
-        log.info("修改id为{}设施类型 : {}", id, saveDTO);
-        return ResponseResult.success(facilityTypeService.updateType(id, saveDTO));
+    public ResponseResult<Boolean> updateType(@Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
+        log.info("修改设施类型 : {}", saveDTO);
+        return ResponseResult.success(facilityTypeService.updateType(saveDTO));
     }
 
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除设施类型", description = "批量删除设施类型")
-    public ResponseResult<Boolean> deleteType(@RequestBody List<Long> ids) {
+    public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
         log.info("批量删除设施类型 : {}", ids);
         return ResponseResult.success(facilityTypeService.deleteByIds(ids));
     }

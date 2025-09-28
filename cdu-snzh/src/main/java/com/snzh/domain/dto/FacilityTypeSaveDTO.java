@@ -24,6 +24,9 @@ public class FacilityTypeSaveDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "设施类型id")
+    private Long id;
+
     @NotBlank(message = ValidationConstants.FACILITY_TYPE_NAME_NOT_NULL)
     @Size(max = 50, message = ValidationConstants.FACILITY_TYPE_NAME_TOO_LONG)
     @Schema(description = "类型名称")

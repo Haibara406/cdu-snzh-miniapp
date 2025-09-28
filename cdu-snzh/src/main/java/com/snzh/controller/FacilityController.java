@@ -110,16 +110,16 @@ public class FacilityController {
         return ResponseResult.success(id);
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/update")
     @Operation(summary = "修改设施", description = "更新设施信息")
-    public ResponseResult<Boolean> updateFacility(@PathVariable("id")  Long id, @Valid @RequestBody FacilitySaveDTO saveDTO) {
-        Boolean success = facilityService.updateFacility(id, saveDTO);
+    public ResponseResult<Boolean> updateFacility(@Valid @RequestBody FacilitySaveDTO saveDTO) {
+        Boolean success = facilityService.updateFacility(saveDTO);
         return ResponseResult.success(success);
     }
 
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除设施", description = "批量删除设施")
-    public ResponseResult<Boolean> batchDeleteFacility(@RequestBody List<Long> ids) {
+    public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
         boolean success = facilityService.deleteByIds(ids);
         return ResponseResult.success(success);
     }

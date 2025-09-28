@@ -22,6 +22,9 @@ public class FacilitySaveDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "设施id")
+    private Long id;
+
     @Schema(description = "设施类型ID")
     private Integer facilityTypeId;
 

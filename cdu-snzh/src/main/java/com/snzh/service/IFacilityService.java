@@ -41,7 +41,7 @@ public interface IFacilityService extends IService<Facility> {
 
     Long addFacility(FacilitySaveDTO saveDTO);
 
-    Boolean updateFacility(Long id, FacilitySaveDTO saveDTO);
+    Boolean updateFacility(FacilitySaveDTO saveDTO);
 
     boolean deleteByIds(List<Long> ids);
 

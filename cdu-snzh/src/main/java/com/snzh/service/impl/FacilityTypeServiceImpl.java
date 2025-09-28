@@ -1,6 +1,7 @@
 package com.snzh.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -12,6 +13,7 @@ import com.snzh.domain.vo.FacilityTypeVO;
 import com.snzh.domain.vo.PageVo;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
+import com.snzh.exceptions.DataNotExistException;
 import com.snzh.exceptions.FacilityTypeHasExistException;
 import com.snzh.exceptions.FacilityTypeNotFoundException;
 import com.snzh.mapper.FacilityTypeMapper;
@@ -106,6 +108,9 @@ public class FacilityTypeServiceImpl extends ServiceImpl<FacilityTypeMapper, Fac
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long addType(FacilityTypeSaveDTO saveDTO) {
+        if(StringUtils.isNull(saveDTO)){
+            throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
+        }
         if(facilityTypeMapper.exists(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getName, saveDTO.getName()))){
             throw new FacilityTypeHasExistException(ErrorConst.FACILITY_TYPE_HAS_EXIST);
         }
@@ -119,8 +124,11 @@ public class FacilityTypeServiceImpl extends ServiceImpl<FacilityTypeMapper, Fac
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean updateType(Long id, FacilityTypeSaveDTO saveDTO) {
-        FacilityType facilityType = facilityTypeMapper.selectOne(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getId, id));
+    public Boolean updateType(FacilityTypeSaveDTO saveDTO) {
+        if(StringUtils.isNull(saveDTO.getId())){
+            throw new DataNotExistException(ErrorConst.FACILITY_ID_NOT_NULL);
+        }
+        FacilityType facilityType = facilityTypeMapper.selectOne(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getId, saveDTO.getId()));
         if(StringUtils.isNull(facilityType)){
             throw new FacilityTypeNotFoundException(ErrorConst.FACILITY_TYPE_NOT_FOUND);
         }
@@ -130,9 +138,8 @@ public class FacilityTypeServiceImpl extends ServiceImpl<FacilityTypeMapper, Fac
                 && facilityTypeMapper.exists(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getName, saveDTO.getName()))){
             throw new FacilityTypeHasExistException(ErrorConst.FACILITY_TYPE_HAS_EXIST);
         }
-        facilityType = BeanUtil.copyProperties(saveDTO, FacilityType.class);
-        facilityType.setId(id);
-        clearCache(id);
+        BeanUtil.copyProperties(saveDTO, facilityType, CopyOptions.create().ignoreNullValue());
+        clearCache(saveDTO.getId());
         return updateById(facilityType);
     }
 

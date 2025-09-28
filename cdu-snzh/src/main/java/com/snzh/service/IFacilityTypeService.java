@@ -27,7 +27,7 @@ public interface IFacilityTypeService extends IService<FacilityType> {
 
     Long addType(FacilityTypeSaveDTO saveDTO);
 
-    Boolean updateType(Long id, FacilityTypeSaveDTO saveDTO);
+    Boolean updateType(FacilityTypeSaveDTO saveDTO);
 
     boolean deleteByIds(List<Long> ids);
 

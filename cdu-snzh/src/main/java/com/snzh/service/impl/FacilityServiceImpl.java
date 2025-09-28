@@ -1,6 +1,7 @@
 package com.snzh.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -318,23 +319,27 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean updateFacility(Long id, FacilitySaveDTO saveDTO) {
-        if(StringUtils.isNull(saveDTO.getFacilityTypeId())
+    public Boolean updateFacility(FacilitySaveDTO saveDTO) {
+        if(StringUtils.isNull(saveDTO)
+                || StringUtils.isNull(saveDTO.getFacilityTypeId())
                 || StringUtils.isEmpty(saveDTO.getLatitude())
                 || StringUtils.isEmpty(saveDTO.getLongitude())){
             throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
         }
+        if(StringUtils.isNull(saveDTO.getId())){
+            throw new DataNotExistException(ErrorConst.FACILITY_ID_NOT_NULL);
+        }
 
-        if(!facilityMapper.exists(Wrappers.lambdaQuery(Facility.class).eq(Facility::getId, id))){
+        if(!facilityMapper.exists(Wrappers.lambdaQuery(Facility.class).eq(Facility::getId, saveDTO.getId()))){
             throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
         }
         if(!facilityTypeMapper.exists(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getId, saveDTO.getFacilityTypeId()))){
             throw new FacilityTypeNotFoundException(ErrorConst.FACILITY_TYPE_NOT_FOUND);
         }
 
-        Facility facility = BeanUtil.copyProperties(saveDTO, Facility.class);
-        facility.setId(id);
-        redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_DETAILS, id));
+        Facility facility = new Facility();
+        BeanUtil.copyProperties(saveDTO, facility, CopyOptions.create().ignoreNullValue());
+        redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_DETAILS, saveDTO.getId()));
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_FOR_TYPE, saveDTO.getFacilityTypeId()));
         return updateById(facility);
     }
