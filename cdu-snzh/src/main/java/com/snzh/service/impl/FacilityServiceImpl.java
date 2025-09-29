@@ -351,6 +351,14 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
             throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
         }
 
+        if(facilityMapper.exists(
+                Wrappers.lambdaQuery(Facility.class)
+                        .eq(Facility::getFacilityTypeId, saveDTO.getFacilityTypeId())
+                        .eq(Facility::getName, saveDTO.getName()))){
+            throw new FacilityHasExistException(ErrorConst.FACILITY_HAS_EXIST);
+
+        }
+
         Facility facility = new Facility();
         BeanUtil.copyProperties(saveDTO, facility, CopyOptions.create().ignoreNullValue());
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_DETAILS, saveDTO.getId()));
