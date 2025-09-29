@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -61,13 +62,13 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
     @Override
     public List<FacilityVO> getFacilitiesByType(Long typeId) {
         List<FacilityVO> facilities = redisCache.getValueIsList(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_FOR_TYPE, typeId), FacilityVO.class);
-        if(StringUtils.isNull(facilities)){
+        if(StringUtils.isEmpty(facilities)){
             List<Facility> facilityList = facilityMapper
                     .selectList(Wrappers.lambdaQuery(Facility.class)
                             .eq(Facility::getFacilityTypeId, typeId)
                             .eq(Facility::getStatus, StatusEnum.RUN.getCode())
                             .orderByAsc(Facility::getId));
-            if(StringUtils.isNull(facilityList)){
+            if(StringUtils.isEmpty(facilityList)){
                 throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
             }
             facilities = facilityList
@@ -85,8 +86,7 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
         if(StringUtils.isNull(facilityVO)){
             Facility facility = facilityMapper
                     .selectOne(Wrappers.lambdaQuery(Facility.class)
-                            .eq(Facility::getId, id)
-                            .eq(Facility::getStatus, StatusEnum.RUN.getCode()));
+                            .eq(Facility::getId, id));
             if(StringUtils.isNull(facility)){
                 throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
             }
@@ -102,7 +102,7 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
                 .selectList(Wrappers.lambdaQuery(Facility.class)
                         .eq(Facility::getFacilityTypeId, typeId)
                         .eq(Facility::getStatus, StatusEnum.RUN.getCode()));
-        if(StringUtils.isNull(facilities)){
+        if(StringUtils.isEmpty(facilities)){
             return "";
         }
 
@@ -306,8 +306,16 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
             || StringUtils.isEmpty(saveDTO.getLongitude())){
             throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
         }
+        if(!facilityTypeMapper.exists(
+                Wrappers.lambdaQuery(FacilityType.class)
+                        .eq(FacilityType::getId, saveDTO.getFacilityTypeId())
+                        .eq(FacilityType::getStatus, StatusEnum.RUN.getCode()))){
+            throw new FacilityTypeNotFoundException(ErrorConst.FACILITY_TYPE_NOT_FOUND);
+        }
 
-        if(facilityMapper.exists(Wrappers.lambdaQuery(Facility.class).eq(Facility::getName, saveDTO.getName()))){
+        if(facilityMapper.exists(
+                Wrappers.lambdaQuery(Facility.class)
+                        .eq(Facility::getName, saveDTO.getName()))){
             throw new FacilityHasExistException(ErrorConst.FACILITY_HAS_EXIST);
         }
 
@@ -330,11 +338,17 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
             throw new DataNotExistException(ErrorConst.FACILITY_ID_NOT_NULL);
         }
 
-        if(!facilityMapper.exists(Wrappers.lambdaQuery(Facility.class).eq(Facility::getId, saveDTO.getId()))){
-            throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
-        }
-        if(!facilityTypeMapper.exists(Wrappers.lambdaQuery(FacilityType.class).eq(FacilityType::getId, saveDTO.getFacilityTypeId()))){
+        if(!facilityTypeMapper.exists(
+                Wrappers.lambdaQuery(FacilityType.class)
+                        .eq(FacilityType::getId, saveDTO.getFacilityTypeId())
+                        .eq(FacilityType::getStatus, StatusEnum.RUN.getCode()))){
             throw new FacilityTypeNotFoundException(ErrorConst.FACILITY_TYPE_NOT_FOUND);
+        }
+
+        if(!facilityMapper.exists(
+                Wrappers.lambdaQuery(Facility.class)
+                        .eq(Facility::getId, saveDTO.getId()))){
+            throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
         }
 
         Facility facility = new Facility();
@@ -349,8 +363,19 @@ public class FacilityServiceImpl extends ServiceImpl<FacilityMapper, Facility> i
     public boolean deleteByIds(List<Long> ids) {
         List<RedisKeyBuild> keys = new ArrayList<>();
         if (ids != null && !ids.isEmpty()) {
+            List<Long> typeIds = facilityMapper.selectList(
+                            Wrappers.<Facility>lambdaQuery()
+                                    .in(Facility::getId, ids)
+                                    .select(Facility::getFacilityTypeId)
+                    ).stream()
+                    .map(Facility::getFacilityTypeId)
+                    .distinct()
+                    .toList();
             ids.forEach(id ->
                     keys.add(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_DETAILS, id))
+            );
+            typeIds.forEach(typeId ->
+                    keys.add(RedisKeyBuild.createKey(RedisKeyManage.FACILITY_FOR_TYPE, typeId))
             );
         }
         redisCache.del(keys);

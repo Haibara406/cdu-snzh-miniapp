@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.concurrent.TimeUnit;
@@ -104,6 +105,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateUserInfo(Long userId, UserInfoUpdateDTO userInfoUpdateDTO) {
         if(userId == null || userInfoUpdateDTO == null){
             throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
@@ -121,6 +123,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean bindWxPhone(Long userId, WxPhoneDTO wxPhoneDTO) {
         if (userId == null || wxPhoneDTO == null) {
             throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
@@ -183,6 +186,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateStatus(Long id, Integer status) {
         if(!userMapper.exists(Wrappers.lambdaQuery(AppUser.class).eq(AppUser::getId, id))){
             throw new AccountNotFoundException(ErrorConst.ACCOUNT_NOT_FOUND);
@@ -197,6 +201,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean uploadAvatar(MultipartFile file, String name) {
         Long userId = UserContext.get("userId");
         if(userId == null){

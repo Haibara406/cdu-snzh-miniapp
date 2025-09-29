@@ -36,7 +36,7 @@ public class Facility  extends BaseTableData implements Serializable {
     private Long id;
 
     @Schema(description = "设施类型ID")
-    private Integer facilityTypeId;
+    private Long facilityTypeId;
 
     @Schema(description = "设施名称")
     private String name;
