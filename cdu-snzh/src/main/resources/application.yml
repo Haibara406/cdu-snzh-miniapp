@@ -85,6 +85,7 @@ snzh:
   gaode:
     address: https://restapi.amap.com/v3
     key: 99014055e07f33fbc1d67e49a650640f
+    #key: dae1412666dc00d4f9660b4e558396b1
     timeout: 5000
     connect-timeout: 3000
     static-map:

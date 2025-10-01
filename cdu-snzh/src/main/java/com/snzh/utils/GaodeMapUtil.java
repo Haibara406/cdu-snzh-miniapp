@@ -394,6 +394,42 @@ public class GaodeMapUtil {
     }
 
     /**
+     * 天气查询
+     *
+     * @param city       城市编码（adcode，参考高德城市编码表）
+     * @param extensions 气象类型（base: 实况天气, all: 预报天气）
+     * @return 天气信息
+     */
+    public JSONObject queryWeather(String city, String extensions) {
+        if (StrUtil.isBlank(city)) {
+            log.error("城市编码不能为空");
+            throw new MapServerException("城市编码不能为空");
+        }
+        try {
+            String url = this.address + "/weather/weatherInfo";
+            Map<String, Object> params = new HashMap<>();
+            params.put("key", this.key);
+            params.put("city", city);
+            params.put("extensions", StrUtil.isNotBlank(extensions) ? extensions : "base");
+            params.put("output", "JSON");
+
+            String response = executeRequest(url, params);
+            JSONObject result = JSONUtil.parseObj(response);
+
+            if (!"1".equals(result.getStr("status"))) {
+                log.error("天气查询失败：{}", result.getStr("info"));
+                throw new MapServerException("天气查询失败: " + result.getStr("info"));
+            }
+
+            return result;
+        } catch (Exception e) {
+            log.error("天气查询异常", e);
+            throw new MapServerException("天气查询异常: " + e.getMessage());
+        }
+    }
+
+
+    /**
      * 执行HTTP请求（GET方式）
      *
      * @param url    请求URL
