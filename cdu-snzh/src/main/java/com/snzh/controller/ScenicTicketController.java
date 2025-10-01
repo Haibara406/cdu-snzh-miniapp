@@ -42,13 +42,6 @@ public class ScenicTicketController {
         return ResponseResult.success(tickets);
     }
 
-    @PostMapping("/buy")
-    @Operation(summary = "购买门票", description = "购买景点门票")
-    public ResponseResult<Void> buyTicket() {
-        // TODO
-        return ResponseResult.success();
-    }
-
     @GetMapping("/detail/{id}")
     @Operation(summary = "根据ID获取门票详情", description = "根据景点票种关联ID获取门票详情")
     public ResponseResult<ScenicTicketVO> getScenicTicketDetail(
