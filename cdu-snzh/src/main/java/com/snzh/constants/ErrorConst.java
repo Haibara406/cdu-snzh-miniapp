@@ -113,4 +113,27 @@ public class ErrorConst {
 
     public static final String FACILITY_HAS_EXIST = "基础设施已存在";
 
+    public static final String PHOTO_NAME_EXIST = "图片名已存在";
+
+    public static final String PHOTO_NOT_EXIST = "图片不存在";
+
+    public static final String TICKET_TYPE_NOT_EXIST = "门票类型不存在";
+
+    public static final String TICKET_TYPE_HAS_EXIST = "门票类型已存在";
+
+    public static final String TICKET_TYPE_ID_NOT_NULL = "门票类型id不能为空";
+
+    public static final String TICKET_TYPE_NAME_NOT_NULL = "门票类型名不能为空";
+
+    public static final String SCENIC_TICKET_NOT_FOUND = "景点门票不存在";
+
+    public static final String SCENIC_TICKET_HAS_EXIST = "景点门票已存在";
+
+    public static final String SCENIC_TICKET_ID_NOT_NULL = "景点门票id不能为空";
+
+    public static final String SCENIC_SPOT_NOT_FOUND = "景点不存在";
+
+    public static final String SCENIC_SPOT_ID_NOT_NULL = "景点id不能为空";
+
+    public static final String SCENIC_SPOT_HAS_EXIST = "景点已存在";
 }

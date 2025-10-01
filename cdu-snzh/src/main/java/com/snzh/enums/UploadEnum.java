@@ -20,13 +20,13 @@ public enum UploadEnum {
 
     // 景点封面
     @Schema(description = "景点封面")
-    ARTICLE_COVER("scenic/scenicCover/", "景点封面", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.WEBP), 5.0, 2),
+    SCENIC_COVER("scenic/scenicCover/", "景点封面", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.WEBP), 5.0, 0),
     // 景点图片
     @Schema(description = "景点图片")
-    ARTICLE_IMAGE("scenic/scenicImage/", "景点图片", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.GIF, ImageConst.WEBP), 5.0, 3),
+    SCENIC_IMAGE("scenic/scenicImage/", "景点图片", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.GIF, ImageConst.WEBP), 5.0, 1),
     // 用户头像
     @Schema(description = "用户头像")
-    USER_AVATAR("user/avatar/", "用户头像", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.WEBP), 5.0, 4);
+    USER_AVATAR("user/avatar/", "用户头像", List.of(ImageConst.JPG, ImageConst.JPEG, ImageConst.PNG, ImageConst.WEBP), 5.0, 2);
 
 
 
@@ -43,5 +43,5 @@ public enum UploadEnum {
     private final Double limitSize;
 
     // 上传的类型
-    private final int type;
+    private final Integer type;
 }

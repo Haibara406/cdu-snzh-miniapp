@@ -67,4 +67,40 @@ public class ValidationConstants {
 
     public static final String ID_TYPE_NOT_NULL = "idType不能为空";
 
+    public static final String SCENIC_ID_NOT_NULL = "景区id不能为空";
+
+    public static final String SCENIC_NAME_NOT_NULL = "景区名字不能为空";
+
+    public static final String SCENIC_NAME_TOO_LONG = "景区名字长度应在2-100字符之间";
+
+    public static final String SCENIC_DES_TOO_LONG = "景区描述长度应在2-2000字符之间";
+
+    public static final String SCENIC_ADDRESS_NOT_NULL = "景区地址不能为空";
+
+    public static final String SCENIC_ADDRESS_TOO_LONG = "景区地址长度不能超过255字符";
+
+    public static final String INCORRECT_SCENIC_MODEL_URL = "景点3d模型url链接不正确";
+
+    public static final String SCENIC_DISPLAY_ORDER_NOT_NULL = "景点展示顺序不能为空";
+
+    public static final String TICKET_TYPE_ID_NOT_NULL = "门票类型id不能为空";
+
+    public static final String SOLD_COUNT_MUST_BE_POSITIVE = "销售数量不能为复数";
+
+    public static final String INCORRECT_PRICE = "价格不正常";
+
+    public static final String ADDRESS_KEYWORD_TOO_LONG = "地址关键词不能超过50个字符";
+
+    public static final String SCENIC_KEYWORD_TOO_LONG = "景区关键字不能超过50字符";
+
+    public static final String VALID_DAYS_MUST_BE_POSITIVE = "有效天数不能为负数";
+
+    public static final String TICKET_TYPE_NAME_TOO_LONG = "票种名称不能超过100个字符";
+
+    public static final String TICKET_TYPE_NAME_NOT_NULL = "门票类型名不能为空";
+
+    public static final String TICKET_TYPE_DES_TOO_LONG = "门票类型描述长度应在2-2000字符之间";
+
+    public static final String SCENIC_TICKET_SOLD_COUNT_MUST_BE_POSITIVE = "景点门票售卖数量不能为负数";
+
 }

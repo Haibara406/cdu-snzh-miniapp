@@ -21,9 +21,13 @@ public enum RedisKeyManage {
 
     USER_LOGIN("user:login:%s","用户id" ,"value为refreshToken"),
     FACILITY_TYPE_SINGLE("facility:type:%s", "基础设施类型id", "value为FacilityType类型"),
-    FACILITY_TYPE_ALL("facility:type:all", "", "value为List<FacilityTypeVO>"),
+    FACILITY_TYPE_ALL("facility:type:all", "", "value为List<FacilityTypeVO>类型"),
     FACILITY_FOR_TYPE("facility:%s", "基础设施类型id", "value为List<FacilityVO>类型"),
-    FACILITY_DETAILS("facility:details:%s", "基础设施id", "value为Facility类型")
+    FACILITY_DETAILS("facility:details:%s", "基础设施id", "value为Facility类型"),
+    SCENIC_TICKET_FOR_SPOT("scenic:ticket:spot:%s", "景点ID", "value为List<ScenicTicketVO>类型"),
+    SCENIC_TICKET_DETAIL("scenic:ticket:detail:%s", "票ID", "value为ScenicTicketVO类型"),
+    SCENIC_SPOT_DETAIL("scenic:spot:detail:%s", "景点id", "value为ScenicSpotVO类型"),
+    SCENIC_SPOT_LIST("scenic:spot:list", "", "value为List<ScenicSpotVO>类型")
     ;
 
 
