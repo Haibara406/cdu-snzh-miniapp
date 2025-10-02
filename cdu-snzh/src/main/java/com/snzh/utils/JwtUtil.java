@@ -27,18 +27,12 @@ public class JwtUtil {
 
     private final JwtProperties jwtProperties;
 
-    private final String secret = jwtProperties.getSecret();
-
-    private final long accessTokenExpire = jwtProperties.getAccessTokenExpire();
-
-    private final long refreshTokenExpire = jwtProperties.getRefreshTokenExpire();
-
     private SecretKey key;
 
     @PostConstruct
     public void init() {
         // 初始化密钥
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
     /**
@@ -53,7 +47,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(userId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpire))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpire()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -65,7 +59,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(userId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpire))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshTokenExpire()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

@@ -19,10 +19,10 @@ public class JwtProperties {
     @Value("${snzh.jwt.secret}")
     private String secret;
 
-    @Value("${snzh.jwt.access-expire}")
+    @Value("${snzh.jwt.access-token-expire}")
     private long accessTokenExpire;
 
-    @Value("${snzh.jwt.refresh-expire}")
+    @Value("${snzh.jwt.refresh-token-expire}")
     private long refreshTokenExpire;
 
 }
