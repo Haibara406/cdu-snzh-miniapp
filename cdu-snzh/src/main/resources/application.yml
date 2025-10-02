@@ -82,6 +82,13 @@ snzh:
     weChatPayCertFilePath: D:\wechatpay_166D96F876F45C7D07CE98952A96EC980368ACFC.pem
     notifyUrl: https://www.weixin.qq.com/wxpay/pay.php
     refundNotifyUrl: https://www.weixin.qq.com/wxpay/pay.php
+  # 微信小程序订阅消息模板配置（需要在微信小程序后台申请）
+  template:
+    payment-success: '' # 订单支付成功通知模板ID
+    refund-success: '' # 订单退款成功通知模板ID
+    visit-reminder: '' # 游玩日期提醒模板ID
+    expire-reminder: '' # 订单即将过期提醒模板ID
+    system-announcement: '' # 系统公告通知模板ID
   gaode:
     address: https://restapi.amap.com/v3
     key: 99014055e07f33fbc1d67e49a650640f
@@ -95,4 +102,4 @@ snzh:
   jwt:
     access-token-expire: 3600
     refresh-token-expire: 604800
-    secret:
+    secret: HAIBaRaIIISasukE#cDUshUNanZHuhAi

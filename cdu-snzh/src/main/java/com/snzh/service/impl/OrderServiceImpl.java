@@ -24,6 +24,7 @@ import com.snzh.mapper.OrderMapper;
 import com.snzh.mapper.ScenicTicketMapper;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
+import com.snzh.service.INotificationService;
 import com.snzh.service.IOrderItemService;
 import com.snzh.service.IOrderService;
 import com.snzh.utils.PageUtil;
@@ -56,6 +57,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final IOrderItemService orderItemService;
     private final ScenicTicketMapper scenicTicketMapper;
     private final RedisCache redisCache;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -162,6 +164,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 6. 清除订单详情缓存
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.ORDER_DETAIL, orderNo));
 
+        // 7. 发送支付成功通知
+        try {
+            notificationService.sendPaymentSuccessNotice(order);
+        } catch (Exception e) {
+            log.error("发送支付成功通知失败，订单号：{}", orderNo, e);
+            // 通知失败不影响主流程，仅记录日志
+        }
+
         log.info("订单支付成功，订单号：{}", orderNo);
         return true;
     }
@@ -209,6 +219,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // 7. 清除订单详情缓存
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.ORDER_DETAIL, dto.getOrderNo()));
+
+        // 8. 发送退款成功通知
+        try {
+            notificationService.sendRefundSuccessNotice(order);
+        } catch (Exception e) {
+            log.error("发送退款成功通知失败，订单号：{}", dto.getOrderNo(), e);
+            // 通知失败不影响主流程，仅记录日志
+        }
 
         log.info("订单退款成功，订单号：{}", dto.getOrderNo());
         return true;
@@ -616,6 +634,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         // 6. 清除订单详情缓存
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.ORDER_DETAIL, dto.getOrderNo()));
+
+        // 7. 发送退款成功通知
+        try {
+            notificationService.sendRefundSuccessNotice(order);
+        } catch (Exception e) {
+            log.error("发送退款成功通知失败，订单号：{}", dto.getOrderNo(), e);
+            // 通知失败不影响主流程，仅记录日志
+        }
 
         log.info("管理端退款处理成功，订单号：{}，退款金额：{}", dto.getOrderNo(), dto.getRefundAmount());
         return true;
