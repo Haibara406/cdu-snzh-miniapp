@@ -34,20 +34,6 @@ public class GaodeMapUtil {
 
     private final GaodeMapProperties gaodeMapProperties;
 
-    private final String key = gaodeMapProperties.getKey();
-
-    private final String address = gaodeMapProperties.getAddress();
-
-    private final Integer timeout = gaodeMapProperties.getTimeout();
-
-    private final Integer connectTimeout = gaodeMapProperties.getConnectTimeout();
-
-    private final Integer staticMapZoom = gaodeMapProperties.getStaticMap().getZoom();
-
-    private final Integer staticMapWidth = gaodeMapProperties.getStaticMap().getWidth();
-
-    private final Integer staticMapHeight = gaodeMapProperties.getStaticMap().getHeight();
-
     /**
      * 地理编码 - 地址转经纬度
      */
@@ -57,10 +43,10 @@ public class GaodeMapUtil {
         }
         try {
             String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8);
-            String url = this.address + "/geocode/geo";
+            String url = gaodeMapProperties.getAddress() + "/geocode/geo";
 
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("address", encodedAddress);
 
             String response = executeRequest(url, params);
@@ -92,10 +78,10 @@ public class GaodeMapUtil {
     public String reverseGeocode(String longitude, String latitude) {
         try {
             String location = longitude + "," + latitude;
-            String url = this.address + "/geocode/regeo";
+            String url = gaodeMapProperties.getAddress() + "/geocode/regeo";
 
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("location", location);
 
             String response = executeRequest(url, params);
@@ -126,22 +112,22 @@ public class GaodeMapUtil {
      */
     // TODO 待优化
     public JSONObject routePlanning(String startLongitude, String startLatitude,
-                                             String endLongitude, String endLatitude, int type) {
+                                            String endLongitude, String endLatitude, int type) {
         try {
             String origin = startLongitude + "," + startLatitude;
             String destination = endLongitude + "," + endLatitude;
 
             String url;
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("origin", origin);
             params.put("destination", destination);
 
             url = switch (type) {
-                case 0 -> this.address + "/direction/driving";
-                case 1 -> this.address + "/direction/walking";
-                case 2 -> this.address + "/direction/transit/integrated";
-                case 3 -> this.address + "/direction/bicycling";
+                case 0 -> gaodeMapProperties.getAddress() + "/direction/driving";
+                case 1 -> gaodeMapProperties.getAddress() + "/direction/walking";
+                case 2 -> gaodeMapProperties.getAddress() + "/direction/transit/integrated";
+                case 3 -> gaodeMapProperties.getAddress() + "/direction/bicycling";
                 default -> throw new MapServerException("不支持的出行方式类型");
             };
 
@@ -191,10 +177,10 @@ public class GaodeMapUtil {
                                    Integer radius, String type, Integer page, Integer limit) {
         try {
             String location = longitude + "," + latitude;
-            String url = this.address + "/place/around";
+            String url = gaodeMapProperties.getAddress() + "/place/around";
 
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("location", location);
             params.put("keywords", keyword);
             params.put("radius", radius != null ? radius : MapConstant.Default.SEARCH_RADIUS);
@@ -251,9 +237,9 @@ public class GaodeMapUtil {
             log.error(ErrorConst.KEYWORD_NOT_NULL);
         }
         try {
-            String url = this.address + "/place/text";
+            String url = gaodeMapProperties.getAddress() + "/place/text";
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("keywords", keyword);
             if (StrUtil.isNotBlank(city)) {
                 params.put("city", city);
@@ -291,10 +277,10 @@ public class GaodeMapUtil {
         try {
             String origins = startLongitude + "," + startLatitude;
             String destination = endLongitude + "," + endLatitude;
-            String url = this.address + "/distance";
+            String url = gaodeMapProperties.getAddress() + "/distance";
 
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("origins", origins);
             params.put("destination", destination);
 
@@ -338,13 +324,13 @@ public class GaodeMapUtil {
                                        Integer zoom, String markers) {
         try {
             String location = longitude + "," + latitude;
-            StringBuilder urlBuilder = new StringBuilder(this.address + "/staticmap?");
+            StringBuilder urlBuilder = new StringBuilder(gaodeMapProperties.getAddress() + "/staticmap?");
 
-            urlBuilder.append("key=").append(this.key);
+            urlBuilder.append("key=").append(gaodeMapProperties.getKey());
             urlBuilder.append("&center=").append(location);
-            urlBuilder.append("&zoom=").append(zoom != null ? zoom : this.staticMapZoom);
-            urlBuilder.append("&size=").append(width != null ? width : this.staticMapWidth)
-                    .append("*").append(height != null ? height : this.staticMapHeight);
+            urlBuilder.append("&zoom=").append(zoom != null ? zoom : gaodeMapProperties.getStaticMap().getZoom());
+            urlBuilder.append("&size=").append(width != null ? width : gaodeMapProperties.getStaticMap().getWidth())
+                    .append("*").append(height != null ? height : gaodeMapProperties.getStaticMap().getHeight());
 
             if (StrUtil.isNotBlank(markers)) {
                 urlBuilder.append("&markers=mid,0xFF0000,A:").append(URLEncoder.encode(markers, StandardCharsets.UTF_8));
@@ -406,9 +392,9 @@ public class GaodeMapUtil {
             throw new MapServerException("城市编码不能为空");
         }
         try {
-            String url = this.address + "/weather/weatherInfo";
+            String url = gaodeMapProperties.getAddress() + "/weather/weatherInfo";
             Map<String, Object> params = new HashMap<>();
-            params.put("key", this.key);
+            params.put("key", gaodeMapProperties.getKey());
             params.put("city", city);
             params.put("extensions", StrUtil.isNotBlank(extensions) ? extensions : "base");
             params.put("output", "JSON");
@@ -442,8 +428,8 @@ public class GaodeMapUtil {
             if (params != null && !params.isEmpty()) {
                 request.form(params);
             }
-            request.timeout(this.timeout);
-            request.setConnectionTimeout(this.connectTimeout);
+            request.timeout(gaodeMapProperties.getTimeout());
+            request.setConnectionTimeout(gaodeMapProperties.getConnectTimeout());
 
             HttpResponse response = request.execute();
             if (!response.isOk()) {
