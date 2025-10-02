@@ -111,9 +111,8 @@ public class OrderTimeoutTask {
 
             for (Order order : expiredVisitOrders) {
                 try {
-                    order.setOrderStatus(OrderStatusEnum.COMPLETED.getCode());
-                    order.setCompleteTime(LocalDateTime.now());
-                    orderService.updateById(order);
+                    // 调用管理端完成订单方法，统一处理逻辑和缓存清理
+                    orderService.adminCompleteOrder(order.getId());
                     
                     log.info("订单自动完成，订单号：{}，游玩日期：{}", order.getOrderNo(), order.getVisitDate());
                     successCount++;
