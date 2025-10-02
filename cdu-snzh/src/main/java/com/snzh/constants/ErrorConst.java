@@ -136,4 +136,43 @@ public class ErrorConst {
     public static final String SCENIC_SPOT_ID_NOT_NULL = "景点id不能为空";
 
     public static final String SCENIC_SPOT_HAS_EXIST = "景点已存在";
+
+    /** 订单不存在 */
+    public static final String ORDER_NOT_FOUND = "订单不存在";
+
+    /** 订单状态异常 */
+    public static final String ORDER_STATUS_ERROR = "订单状态异常，无法执行此操作";
+
+    /** 订单只能取消已支付状态的订单 */
+    public static final String ORDER_ONLY_CANCEL_PAID = "只能取消已支付状态的订单";
+
+    /** 订单取消时间不符合要求 */
+    public static final String ORDER_CANCEL_TIME_ERROR = "距离游玩日期不足1天，无法取消订单";
+
+    /** 订单已支付 */
+    public static final String ORDER_ALREADY_PAID = "订单已支付，无法重复支付";
+
+    /** 订单已取消 */
+    public static final String ORDER_ALREADY_CANCELLED = "订单已取消";
+
+    /** 订单创建失败 */
+    public static final String ORDER_CREATE_FAILED = "订单创建失败";
+
+    /** 订单号已存在 */
+    public static final String ORDER_NO_EXIST = "订单号已存在";
+
+    /** 订单已过期 */
+    public static final String ORDER_EXPIRED = "订单已过期，无法支付";
+
+    /** 订单超时自动取消 */
+    public static final String ORDER_TIMEOUT_CANCELLED = "订单超时未支付，系统自动取消";
+
+    /** 订单价格不匹配 */
+    public static final String ORDER_PRICE_MISMATCH = "订单价格与商品价格不一致";
+
+    /** 无权操作此订单 */
+    public static final String ORDER_NO_PERMISSION = "无权操作此订单";
+
+    /** 门票已下架 */
+    public static final String TICKET_DISABLED = "门票已下架，无法购买";
 }

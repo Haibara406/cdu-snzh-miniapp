@@ -27,7 +27,8 @@ public enum RedisKeyManage {
     SCENIC_TICKET_FOR_SPOT("scenic:ticket:spot:%s", "景点ID", "value为List<ScenicTicketVO>类型"),
     SCENIC_TICKET_DETAIL("scenic:ticket:detail:%s", "票ID", "value为ScenicTicketVO类型"),
     SCENIC_SPOT_DETAIL("scenic:spot:detail:%s", "景点id", "value为ScenicSpotVO类型"),
-    SCENIC_SPOT_LIST("scenic:spot:list", "", "value为List<ScenicSpotVO>类型")
+    SCENIC_SPOT_LIST("scenic:spot:list", "", "value为List<ScenicSpotVO>类型"),
+    ORDER_DETAIL("order:detail:%s", "订单号", "value为OrderVO类型")
     ;
 
 

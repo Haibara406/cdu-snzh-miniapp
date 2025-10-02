@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snzh.mapper.OrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.snzh.domain.entity.Order">
+        <id column="id" property="id" />
+        <result column="order_no" property="orderNo" />
+        <result column="user_id" property="userId" />
+        <result column="phone" property="phone" />
+        <result column="order_type" property="orderType" />
+        <result column="visit_date" property="visitDate" />
+        <result column="total_amount" property="totalAmount" />
+        <result column="order_status" property="orderStatus" />
+        <result column="pay_time" property="payTime" />
+        <result column="cancel_time" property="cancelTime" />
+        <result column="cancel_reason" property="cancelReason" />
+        <result column="refund_time" property="refundTime" />
+        <result column="complete_time" property="completeTime" />
+        <result column="expire_time" property="expireTime" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+</mapper>
+

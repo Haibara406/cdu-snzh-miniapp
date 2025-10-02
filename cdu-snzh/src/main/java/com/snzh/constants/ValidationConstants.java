@@ -103,4 +103,29 @@ public class ValidationConstants {
 
     public static final String SCENIC_TICKET_SOLD_COUNT_MUST_BE_POSITIVE = "景点门票售卖数量不能为负数";
 
+    /** 订单相关校验 */
+    public static final String ORDER_TYPE_NOT_NULL = "订单类型不能为空";
+
+    public static final String ORDER_NO_NOT_NULL = "订单号不能为空";
+
+    public static final String VISIT_DATE_NOT_NULL = "游玩日期不能为空";
+
+    public static final String VISIT_DATE_MUST_FUTURE = "游玩日期必须是未来日期";
+
+    public static final String ORDER_ITEMS_NOT_EMPTY = "订单明细不能为空";
+
+    public static final String ORDER_ITEM_TYPE_NOT_NULL = "订单项类型不能为空";
+
+    public static final String ORDER_ITEM_ID_NOT_NULL = "商品ID不能为空";
+
+    public static final String ORDER_ITEM_NAME_NOT_NULL = "商品名称不能为空";
+
+    public static final String ORDER_QUANTITY_NOT_NULL = "商品数量不能为空";
+
+    public static final String ORDER_QUANTITY_MIN = "商品数量至少为1";
+
+    public static final String ORDER_PRICE_NOT_NULL = "商品价格不能为空";
+
+    public static final String CANCEL_REASON_TOO_LONG = "取消原因不能超过255个字符";
+
 }
