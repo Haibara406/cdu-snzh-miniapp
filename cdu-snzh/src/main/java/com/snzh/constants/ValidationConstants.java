@@ -7,6 +7,13 @@ package com.snzh.constants;
  */
 public class ValidationConstants {
 
+    // ==================== AI知识库相关 ====================
+    public static final String KNOWLEDGE_DOC_NAME_NOT_NULL = "文档名称不能为空";
+    public static final String KNOWLEDGE_DOC_NAME_TOO_LONG = "文档名称长度不能超过255个字符";
+    public static final String KNOWLEDGE_DOC_TYPE_NOT_NULL = "文档类型不能为空";
+    public static final String KNOWLEDGE_DOC_CONTENT_NOT_NULL = "文档内容不能为空";
+
+
     public static final String CODE_NOT_NULL = "微信临时登录凭证不能为空";
 
     public static final String INCORRECT_PHONE_FORMAT = "手机号格式错误";

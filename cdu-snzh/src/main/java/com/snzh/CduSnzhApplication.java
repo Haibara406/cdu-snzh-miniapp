@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@MapperScan("com.snzh.mapper")
+@MapperScan({"com.snzh.mapper", "com.snzh.ai.mapper"})
 @EnableScheduling
 public class CduSnzhApplication {
 

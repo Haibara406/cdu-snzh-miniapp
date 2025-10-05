@@ -28,7 +28,11 @@ public enum RedisKeyManage {
     SCENIC_TICKET_DETAIL("scenic:ticket:detail:%s", "票ID", "value为ScenicTicketVO类型"),
     SCENIC_SPOT_DETAIL("scenic:spot:detail:%s", "景点id", "value为ScenicSpotVO类型"),
     SCENIC_SPOT_LIST("scenic:spot:list", "", "value为List<ScenicSpotVO>类型"),
-    ORDER_DETAIL("order:detail:%s", "订单号", "value为OrderVO类型")
+    ORDER_DETAIL("order:detail:%s", "订单号", "value为OrderVO类型"),
+    
+    // AI智能客服相关
+    AI_CHAT_MEMORY("ai:chat:memory:%s", "会话ID", "value为List<AiChatMessage>类型，存储会话历史"),
+    AI_CHAT_CONTEXT("ai:chat:context:%s", "会话ID", "value为Hash类型，存储会话上下文变量")
     ;
 
 
