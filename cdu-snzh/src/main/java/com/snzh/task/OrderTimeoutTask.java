@@ -95,7 +95,8 @@ public class OrderTimeoutTask {
                             .eq(Order::getOrderStatus, OrderStatusEnum.PAID.getCode())
                             .le(Order::getVisitDate, yesterday)
                             .orderByAsc(Order::getVisitDate)
-                            .last("LIMIT 1000") // 一次最多处理1000条
+                            // 一次最多处理1000条
+                            .last("LIMIT 1000")
             );
 
             if (expiredVisitOrders.isEmpty()) {
