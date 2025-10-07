@@ -239,10 +239,18 @@ public class AiChatServiceImpl implements IAiChatService {
                 case "createOrder" -> {
                     // 创建订单：需要多个参数
                     // userId从ThreadLocal上下文中获取，不从AI参数获取（安全考虑）
-                    Long userId = UserContext.get("userId");
-                    if (userId == null) {
+                    String userIdStr = UserContext.get("userId");
+                    if (userIdStr == null) {
                         log.error("创建订单失败：无法从上下文获取用户ID");
                         yield "创建订单失败：用户未登录或会话已过期，请重新登录";
+                    }
+                    
+                    Long userId;
+                    try {
+                        userId = Long.parseLong(userIdStr);
+                    } catch (NumberFormatException e) {
+                        log.error("创建订单失败：用户ID格式错误，userIdStr: {}", userIdStr, e);
+                        yield "创建订单失败：用户信息异常，请重新登录";
                     }
                     
                     String phone = getArgumentAsString(arguments, "phone", "arg0");
@@ -297,6 +305,13 @@ public class AiChatServiceImpl implements IAiChatService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AiChatResponseVO chat(AiChatRequestDTO request) {
+        // 校验userId一致性（Token中的userId vs Request中的userId）
+        String tokenUserId = UserContext.get("userId");
+        if (tokenUserId != null && !tokenUserId.equals(request.getUserId().toString())) {
+            log.warn("用户ID不匹配！Token userId: {}, Request userId: {}", tokenUserId, request.getUserId());
+            throw new SecurityException("用户身份验证失败");
+        }
+        
         String sessionId = request.getSessionId();
         boolean isNewSession = false;
 
