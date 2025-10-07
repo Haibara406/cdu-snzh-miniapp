@@ -428,6 +428,21 @@ public class AiChatServiceImpl implements IAiChatService {
 
     @Override
     public void chatStream(AiChatRequestDTO request, SseEmitter emitter) {
+        // 校验userId一致性（Token中的userId vs Request中的userId）
+        String tokenUserId = UserContext.get("userId");
+        if (tokenUserId != null && !tokenUserId.equals(request.getUserId().toString())) {
+            log.warn("用户ID不匹配！Token userId: {}, Request userId: {}", tokenUserId, request.getUserId());
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("{\"error\":\"用户身份验证失败\"}"));
+                emitter.completeWithError(new SecurityException("用户身份验证失败"));
+            } catch (Exception e) {
+                log.error("发送错误信息失败", e);
+            }
+            return;
+        }
+        
         String sessionId = request.getSessionId();
         boolean isNewSession = false;
 
