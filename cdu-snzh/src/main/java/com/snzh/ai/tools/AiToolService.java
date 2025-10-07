@@ -214,9 +214,11 @@ public class AiToolService {
 
     /**
      * 创建订单（AI引导用户提供信息后调用）
-     * 注意：此方法仅创建订单，不进行实际支付。支付需要用户在小程序中完成。
+     * 注意：
+     * 1. 此方法仅创建订单，不进行实际支付。支付需要用户在小程序中完成。
+     * 2. userId由系统自动从当前登录用户上下文获取，无需AI提供。
      * 
-     * @param userId 用户ID
+     * @param userId 用户ID（系统自动注入，非AI参数）
      * @param phone 手机号
      * @param orderType 订单类型（1=景点门票, 2=住宿, 3=餐饮, 4=文创商品）
      * @param visitDate 游玩日期（格式：yyyy-MM-dd）
@@ -226,8 +228,9 @@ public class AiToolService {
      * @param price 单价
      * @return 订单创建结果信息（包含订单号）
      */
-    @Tool("创建订单。在AI引导用户确认所有必要信息（游玩日期、门票类型、数量、手机号）后调用此工具创建订单。" +
-         "参数说明：userId=用户ID（从会话中获取）, phone=手机号, orderType=订单类型（1=景点门票）, " +
+    @Tool("创建订单。在引导用户确认所有必要信息（游玩日期、门票类型、数量、手机号）后调用此工具创建订单。" +
+         "注意：userId由系统自动识别当前用户，无需在参数中提供。" +
+         "参数说明：phone=手机号, orderType=订单类型（1=景点门票，可选，默认为1）, " +
          "visitDate=游玩日期（格式：yyyy-MM-dd，必须是未来日期）, ticketId=门票ID, ticketName=门票名称, " +
          "quantity=购买数量, price=门票单价")
     public String createOrder(

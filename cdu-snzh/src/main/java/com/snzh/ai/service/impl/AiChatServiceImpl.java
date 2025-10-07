@@ -20,6 +20,7 @@ import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
+import com.snzh.threadlocal.UserContext;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
@@ -237,19 +238,22 @@ public class AiChatServiceImpl implements IAiChatService {
                 
                 case "createOrder" -> {
                     // 创建订单：需要多个参数
-                    Long userId = getArgumentAsLong(arguments, "userId", "arg0");
-                    String phone = getArgumentAsString(arguments, "phone", "arg1");
-                    Integer orderType = getArgumentAsInteger(arguments, "orderType", "arg2");
-                    String visitDate = getArgumentAsString(arguments, "visitDate", "arg3");
-                    Long ticketId = getArgumentAsLong(arguments, "ticketId", "arg4");
-                    String ticketName = getArgumentAsString(arguments, "ticketName", "arg5");
-                    Integer quantity = getArgumentAsInteger(arguments, "quantity", "arg6");
-                    Double price = getArgumentAsDouble(arguments, "price", "arg7");
+                    // userId从ThreadLocal上下文中获取，不从AI参数获取（安全考虑）
+                    Long userId = UserContext.get("userId");
+                    if (userId == null) {
+                        log.error("创建订单失败：无法从上下文获取用户ID");
+                        yield "创建订单失败：用户未登录或会话已过期，请重新登录";
+                    }
+                    
+                    String phone = getArgumentAsString(arguments, "phone", "arg0");
+                    Integer orderType = getArgumentAsInteger(arguments, "orderType", "arg1");
+                    String visitDate = getArgumentAsString(arguments, "visitDate", "arg2");
+                    Long ticketId = getArgumentAsLong(arguments, "ticketId", "arg3");
+                    String ticketName = getArgumentAsString(arguments, "ticketName", "arg4");
+                    Integer quantity = getArgumentAsInteger(arguments, "quantity", "arg5");
+                    Double price = getArgumentAsDouble(arguments, "price", "arg6");
                     
                     // 参数校验
-                    if (userId == null) {
-                        yield "参数错误：缺少用户ID（userId）";
-                    }
                     if (phone == null) {
                         yield "参数错误：缺少手机号（phone）";
                     }
@@ -326,11 +330,17 @@ public class AiChatServiceImpl implements IAiChatService {
             String aiReply = "";
             int maxIterations = 5;
             for (int i = 0; i < maxIterations; i++) {
-                Response<AiMessage> response = chatModel.generate(messages, toolSpecifications);
+                // 最后一次迭代时不传工具列表，强制AI生成文本回复
+                boolean allowTools = (i < maxIterations - 1);
+                
+                Response<AiMessage> response = allowTools
+                        ? chatModel.generate(messages, toolSpecifications)
+                        : chatModel.generate(messages);
+                        
                 AiMessage aiMessage = response.content();
                 
                 // 检查是否有工具调用请求
-                if (aiMessage.hasToolExecutionRequests()) {
+                if (allowTools && aiMessage.hasToolExecutionRequests()) {
                     log.info("AI请求调用工具，第 {} 次迭代", i + 1);
                     
                     // 将AI的工具调用请求添加到消息列表
@@ -359,8 +369,17 @@ public class AiChatServiceImpl implements IAiChatService {
                 } else {
                     // 没有工具调用，获取最终回复
                     aiReply = aiMessage.text();
+                    if (i == maxIterations - 1 && StrUtil.isBlank(aiReply)) {
+                        log.warn("达到最大工具调用迭代次数({}次)，AI未生成有效回复", maxIterations);
+                    }
                     break;
                 }
+            }
+            
+            // 安全保障：确保一定有回复内容
+            if (StrUtil.isBlank(aiReply)) {
+                log.error("AI回复为空，使用默认回复。sessionId: {}", sessionId);
+                aiReply = "抱歉，我在处理您的请求时遇到了问题，请重新提问或联系人工客服。";
             }
 
             // 6. 保存消息记录
@@ -433,16 +452,20 @@ public class AiChatServiceImpl implements IAiChatService {
 
             // 5. 先检查是否需要工具调用（同步处理）
             // 注意：通义千问的流式API可能不直接支持工具调用，因此我们先同步检查
-            boolean needsToolCall = true;
             int maxToolIterations = 5;
-            int toolIteration = 0;
             
-            while (needsToolCall && toolIteration < maxToolIterations) {
-                Response<AiMessage> checkResponse = chatModel.generate(messages, toolSpecifications);
+            for (int i = 0; i < maxToolIterations; i++) {
+                // 最后一次迭代时不传工具列表，强制AI生成文本回复
+                boolean allowTools = (i < maxToolIterations - 1);
+                
+                Response<AiMessage> checkResponse = allowTools
+                        ? chatModel.generate(messages, toolSpecifications)
+                        : chatModel.generate(messages);
+                        
                 AiMessage checkMessage = checkResponse.content();
                 
-                if (checkMessage.hasToolExecutionRequests()) {
-                    log.info("流式对话检测到工具调用需求，第 {} 次迭代", toolIteration + 1);
+                if (allowTools && checkMessage.hasToolExecutionRequests()) {
+                    log.info("流式对话检测到工具调用需求，第 {} 次迭代", i + 1);
                     
                     // 添加AI的工具调用消息
                     messages.add(checkMessage);
@@ -470,11 +493,12 @@ public class AiChatServiceImpl implements IAiChatService {
                         // 添加工具执行结果
                         messages.add(new ToolExecutionResultMessage(toolRequest.id(), toolName, toolResult));
                     }
-                    
-                    toolIteration++;
                 } else {
                     // 不需要工具调用，跳出循环，进入流式返回
-                    needsToolCall = false;
+                    if (i == maxToolIterations - 1 && checkMessage.hasToolExecutionRequests()) {
+                        log.warn("流式对话达到最大工具调用迭代次数({}次)，强制进入流式回复", maxToolIterations);
+                    }
+                    break;
                 }
             }
 
