@@ -1,6 +1,6 @@
 package com.snzh.utils;
 
-import com.alibaba.fastjson.util.ParameterizedTypeImpl;
+import com.alibaba.fastjson2.util.ParameterizedTypeImpl;
 import com.snzh.redis.RedisKeyBuild;
 
 import java.lang.reflect.Type;

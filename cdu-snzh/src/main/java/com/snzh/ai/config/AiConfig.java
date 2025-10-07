@@ -1,6 +1,9 @@
 package com.snzh.ai.config;
 
 import com.snzh.ai.domain.properties.AiProperties;
+import com.snzh.ai.tools.AiToolService;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.agent.tool.ToolSpecifications;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -15,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 /**
  * @author haibara
  * @description AI配置类
@@ -26,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
 public class AiConfig {
 
     private final AiProperties aiProperties;
+    private final AiToolService aiToolService;
 
     /**
      * 配置通义千问聊天模型（同步阻塞版）
@@ -73,6 +79,18 @@ public class AiConfig {
     public EmbeddingStore<TextSegment> embeddingStore() {
         log.info("初始化向量存储（内存版本）");
         return new InMemoryEmbeddingStore<>();
+    }
+
+    /**
+     * 配置AI工具规范列表（用于支持Function Calling）
+     */
+    @Bean
+    public List<ToolSpecification> toolSpecifications() {
+        log.info("初始化AI工具规范，将AiToolService中的@Tool方法注册为可调用工具");
+        List<ToolSpecification> specs = ToolSpecifications.toolSpecificationsFrom(aiToolService);
+        log.info("已注册 {} 个AI工具：{}", specs.size(), 
+                specs.stream().map(ToolSpecification::name).toList());
+        return specs;
     }
 }
 

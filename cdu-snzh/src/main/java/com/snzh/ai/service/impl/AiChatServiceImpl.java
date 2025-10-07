@@ -2,6 +2,8 @@ package com.snzh.ai.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.snzh.ai.domain.dto.AiChatRequestDTO;
 import com.snzh.ai.domain.entity.AiChatMessage;
@@ -13,14 +15,14 @@ import com.snzh.ai.mapper.AiChatMessageMapper;
 import com.snzh.ai.mapper.AiChatSessionMapper;
 import com.snzh.ai.service.IAiChatService;
 import com.snzh.ai.service.IKnowledgeBaseService;
+import com.snzh.ai.tools.AiToolService;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
@@ -32,7 +34,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -53,6 +57,238 @@ public class AiChatServiceImpl implements IAiChatService {
     private final AiChatMessageMapper messageMapper;
     private final RedisCache redisCache;
     private final AiProperties aiProperties;
+    private final List<ToolSpecification> toolSpecifications;
+    private final AiToolService aiToolService;
+
+    /**
+     * 解析工具参数
+     * 支持多种参数格式：
+     * 1. 对象格式：{"userId": 123, "phone": "13800138000"}
+     * 2. 数组格式：[123, "13800138000"]
+     * 
+     * @param argsJson AI返回的工具参数JSON字符串
+     * @return 解析后的参数Map，key为参数名或arg0/arg1等位置索引
+     */
+    private Map<String, Object> parseToolArguments(String argsJson) {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (StrUtil.isBlank(argsJson) || "{}".equals(argsJson.trim()) || "[]".equals(argsJson.trim())) {
+            return result;
+        }
+        
+        try {
+            // 去除可能的空白字符
+            argsJson = argsJson.trim();
+            
+            // 判断是对象格式还是数组格式
+            if (argsJson.startsWith("{")) {
+                // 对象格式：{"userId": 123, "phone": "13800138000"}
+                JSONObject jsonObject = JSON.parseObject(argsJson);
+                if (jsonObject != null && !jsonObject.isEmpty()) {
+                    result.putAll(jsonObject);
+                }
+            } else if (argsJson.startsWith("[")) {
+                // 数组格式：[123, "13800138000", "2025-10-08"]
+                List<Object> jsonArray = JSON.parseArray(argsJson);
+                if (jsonArray != null && !jsonArray.isEmpty()) {
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        result.put("arg" + i, jsonArray.get(i));
+                    }
+                }
+            } else {
+                // 尝试作为单个值处理
+                log.warn("工具参数格式非标准JSON对象或数组，尝试作为单个值：{}", argsJson);
+                result.put("arg0", argsJson);
+            }
+            
+            log.debug("工具参数解析成功，原始JSON：{}，解析结果：{}", argsJson, result);
+            
+        } catch (Exception e) {
+            log.error("工具参数解析失败，原始JSON：{}", argsJson, e);
+            // 解析失败时返回空Map，避免程序崩溃
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 安全地从参数Map中获取字符串值
+     * 支持多种参数名格式（如：userId、arg0等）
+     * 
+     * @param arguments 参数Map
+     * @param keys 可能的参数名（按优先级排序）
+     * @return 参数值的字符串形式，如果不存在返回null
+     */
+    private String getArgumentAsString(Map<String, Object> arguments, String... keys) {
+        for (String key : keys) {
+            Object value = arguments.get(key);
+            if (value != null) {
+                return value.toString();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 安全地从参数Map中获取Long值
+     * 
+     * @param arguments 参数Map
+     * @param keys 可能的参数名（按优先级排序）
+     * @return Long值，如果不存在或转换失败返回null
+     */
+    private Long getArgumentAsLong(Map<String, Object> arguments, String... keys) {
+        String value = getArgumentAsString(arguments, keys);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            log.warn("参数转换为Long失败：{}", value, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 安全地从参数Map中获取Integer值
+     * 
+     * @param arguments 参数Map
+     * @param keys 可能的参数名（按优先级排序）
+     * @return Integer值，如果不存在或转换失败返回null
+     */
+    private Integer getArgumentAsInteger(Map<String, Object> arguments, String... keys) {
+        String value = getArgumentAsString(arguments, keys);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            log.warn("参数转换为Integer失败：{}", value, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 安全地从参数Map中获取Double值
+     * 
+     * @param arguments 参数Map
+     * @param keys 可能的参数名（按优先级排序）
+     * @return Double值，如果不存在或转换失败返回null
+     */
+    private Double getArgumentAsDouble(Map<String, Object> arguments, String... keys) {
+        String value = getArgumentAsString(arguments, keys);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            log.warn("参数转换为Double失败：{}", value, e);
+            return null;
+        }
+    }
+
+    /**
+     * 执行工具调用
+     * 根据工具名称和参数执行对应的工具方法
+     * 
+     * @param toolName 工具名称
+     * @param arguments 工具参数（已解析为Map）
+     * @return 工具执行结果
+     */
+    private String executeToolCall(String toolName, Map<String, Object> arguments) {
+        try {
+            log.info("执行工具调用：{}, 参数：{}", toolName, arguments);
+            
+            return switch (toolName) {
+                case "queryWeather" -> {
+                    // 天气查询无需参数
+                    yield aiToolService.queryWeather();
+                }
+                
+                case "getScenicDetail" -> {
+                    // 景点详情查询：需要景点ID
+                    Long scenicId = getArgumentAsLong(arguments, "scenicId", "arg0");
+                    if (scenicId == null) {
+                        yield "参数错误：缺少景点ID（scenicId）";
+                    }
+                    yield aiToolService.getScenicDetail(scenicId);
+                }
+                
+                case "listAllScenics" -> {
+                    // 列出所有景点：无需参数
+                    yield aiToolService.listAllScenics();
+                }
+                
+                case "listAvailableTickets" -> {
+                    // 列出在售门票：无需参数
+                    yield aiToolService.listAvailableTickets();
+                }
+                
+                case "recommendRoute" -> {
+                    // 推荐游玩路线：需要游玩时长
+                    String duration = getArgumentAsString(arguments, "duration", "arg0");
+                    if (duration == null) {
+                        yield "参数错误：缺少游玩时长（duration）";
+                    }
+                    yield aiToolService.recommendRoute(duration);
+                }
+                
+                case "createOrder" -> {
+                    // 创建订单：需要多个参数
+                    Long userId = getArgumentAsLong(arguments, "userId", "arg0");
+                    String phone = getArgumentAsString(arguments, "phone", "arg1");
+                    Integer orderType = getArgumentAsInteger(arguments, "orderType", "arg2");
+                    String visitDate = getArgumentAsString(arguments, "visitDate", "arg3");
+                    Long ticketId = getArgumentAsLong(arguments, "ticketId", "arg4");
+                    String ticketName = getArgumentAsString(arguments, "ticketName", "arg5");
+                    Integer quantity = getArgumentAsInteger(arguments, "quantity", "arg6");
+                    Double price = getArgumentAsDouble(arguments, "price", "arg7");
+                    
+                    // 参数校验
+                    if (userId == null) {
+                        yield "参数错误：缺少用户ID（userId）";
+                    }
+                    if (phone == null) {
+                        yield "参数错误：缺少手机号（phone）";
+                    }
+                    if (orderType == null) {
+                        orderType = 1; // 默认为门票类型
+                    }
+                    if (visitDate == null) {
+                        yield "参数错误：缺少游玩日期（visitDate）";
+                    }
+                    if (ticketId == null) {
+                        yield "参数错误：缺少门票ID（ticketId）";
+                    }
+                    if (ticketName == null) {
+                        yield "参数错误：缺少门票名称（ticketName）";
+                    }
+                    if (quantity == null || quantity <= 0) {
+                        yield "参数错误：购买数量无效（quantity）";
+                    }
+                    if (price == null || price <= 0) {
+                        yield "参数错误：门票价格无效（price）";
+                    }
+                    
+                    yield aiToolService.createOrder(
+                            userId, phone, orderType, visitDate, 
+                            ticketId, ticketName, quantity, price
+                    );
+                }
+                
+                default -> {
+                    log.warn("收到未知工具调用请求：{}", toolName);
+                    yield "错误：未知的工具 '" + toolName + "'";
+                }
+            };
+            
+        } catch (Exception e) {
+            log.error("工具调用执行异常 - 工具：{}，参数：{}", toolName, arguments, e);
+            return String.format("工具调用失败（%s）：%s", toolName, e.getMessage());
+        }
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -86,9 +322,46 @@ public class AiChatServiceImpl implements IAiChatService {
             messages.addAll(history);
             messages.add(new UserMessage(request.getMessage()));
 
-            // 5. 调用AI模型获取回复（同步阻塞）
-            Response<AiMessage> response = chatModel.generate(messages);
-            String aiReply = response.content().text();
+            // 5. 调用AI模型获取回复，支持工具调用（最多循环5次）
+            String aiReply = "";
+            int maxIterations = 5;
+            for (int i = 0; i < maxIterations; i++) {
+                Response<AiMessage> response = chatModel.generate(messages, toolSpecifications);
+                AiMessage aiMessage = response.content();
+                
+                // 检查是否有工具调用请求
+                if (aiMessage.hasToolExecutionRequests()) {
+                    log.info("AI请求调用工具，第 {} 次迭代", i + 1);
+                    
+                    // 将AI的工具调用请求添加到消息列表
+                    messages.add(aiMessage);
+                    
+                    // 执行所有工具调用
+                    for (ToolExecutionRequest toolRequest : aiMessage.toolExecutionRequests()) {
+                        String toolName = toolRequest.name();
+                        String argsJson = toolRequest.arguments();
+                        
+                        log.info("AI请求调用工具：{}，参数JSON：{}", toolName, argsJson);
+                        
+                        // 使用FastJson解析参数
+                        Map<String, Object> arguments = parseToolArguments(argsJson);
+                        
+                        // 执行工具
+                        String toolResult = executeToolCall(toolName, arguments);
+                        
+                        log.info("工具 {} 执行完成，结果长度：{}", toolName, toolResult.length());
+                        
+                        // 将工具执行结果添加到消息列表
+                        messages.add(new ToolExecutionResultMessage(toolRequest.id(), toolName, toolResult));
+                    }
+                    
+                    // 继续循环，让AI根据工具结果生成回复
+                } else {
+                    // 没有工具调用，获取最终回复
+                    aiReply = aiMessage.text();
+                    break;
+                }
+            }
 
             // 6. 保存消息记录
             saveMessage(sessionId, "USER", request.getMessage());
@@ -158,10 +431,57 @@ public class AiChatServiceImpl implements IAiChatService {
                     .name("session")
                     .data("{\"sessionId\":\"" + finalSessionId + "\",\"isNewSession\":" + finalIsNewSession + "}"));
 
+            // 5. 先检查是否需要工具调用（同步处理）
+            // 注意：通义千问的流式API可能不直接支持工具调用，因此我们先同步检查
+            boolean needsToolCall = true;
+            int maxToolIterations = 5;
+            int toolIteration = 0;
+            
+            while (needsToolCall && toolIteration < maxToolIterations) {
+                Response<AiMessage> checkResponse = chatModel.generate(messages, toolSpecifications);
+                AiMessage checkMessage = checkResponse.content();
+                
+                if (checkMessage.hasToolExecutionRequests()) {
+                    log.info("流式对话检测到工具调用需求，第 {} 次迭代", toolIteration + 1);
+                    
+                    // 添加AI的工具调用消息
+                    messages.add(checkMessage);
+                    
+                    // 执行所有工具调用
+                    for (ToolExecutionRequest toolRequest : checkMessage.toolExecutionRequests()) {
+                        String toolName = toolRequest.name();
+                        String argsJson = toolRequest.arguments();
+                        
+                        log.info("流式对话 - AI请求调用工具：{}，参数JSON：{}", toolName, argsJson);
+                        
+                        // 通知前端正在执行工具
+                        emitter.send(SseEmitter.event()
+                                .name("tool")
+                                .data("{\"tool\":\"" + toolName + "\",\"status\":\"executing\"}"));
+                        
+                        // 使用FastJson解析参数
+                        Map<String, Object> arguments = parseToolArguments(argsJson);
+                        
+                        // 执行工具
+                        String toolResult = executeToolCall(toolName, arguments);
+                        
+                        log.info("流式对话 - 工具 {} 执行完成", toolName);
+                        
+                        // 添加工具执行结果
+                        messages.add(new ToolExecutionResultMessage(toolRequest.id(), toolName, toolResult));
+                    }
+                    
+                    toolIteration++;
+                } else {
+                    // 不需要工具调用，跳出循环，进入流式返回
+                    needsToolCall = false;
+                }
+            }
+
             // 用于收集完整回复
             StringBuilder fullReplyBuilder = new StringBuilder();
 
-            // 5. 调用流式AI模型获取回复（异步处理）
+            // 6. 调用流式AI模型获取回复（异步处理）
             new Thread(() -> {
                 streamingChatModel.generate(messages, new dev.langchain4j.model.StreamingResponseHandler<AiMessage>() {
                     @Override

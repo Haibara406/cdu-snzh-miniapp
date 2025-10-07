@@ -1,8 +1,11 @@
 package com.snzh.ai.tools;
 
+import com.snzh.domain.dto.OrderCreateDTO;
+import com.snzh.domain.dto.OrderItemDTO;
 import com.snzh.domain.vo.LiveWeatherVO;
 import com.snzh.domain.vo.ScenicSpotVO;
 import com.snzh.domain.vo.ScenicTicketVO;
+import com.snzh.service.IOrderService;
 import com.snzh.service.IScenicSpotService;
 import com.snzh.service.IScenicTicketService;
 import com.snzh.service.impl.WeatherService;
@@ -11,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,6 +32,7 @@ public class AiToolService {
     private final WeatherService weatherService;
     private final IScenicSpotService scenicSpotService;
     private final IScenicTicketService scenicTicketService;
+    private final IOrderService orderService;
 
     /**
      * 查询当前天气
@@ -202,6 +209,97 @@ public class AiToolService {
                     
                     请告诉我您计划的游玩时长，我将为您制定详细路线！
                     """;
+        }
+    }
+
+    /**
+     * 创建订单（AI引导用户提供信息后调用）
+     * 注意：此方法仅创建订单，不进行实际支付。支付需要用户在小程序中完成。
+     * 
+     * @param userId 用户ID
+     * @param phone 手机号
+     * @param orderType 订单类型（1=景点门票, 2=住宿, 3=餐饮, 4=文创商品）
+     * @param visitDate 游玩日期（格式：yyyy-MM-dd）
+     * @param ticketId 门票ID
+     * @param ticketName 门票名称
+     * @param quantity 数量
+     * @param price 单价
+     * @return 订单创建结果信息（包含订单号）
+     */
+    @Tool("创建订单。在AI引导用户确认所有必要信息（游玩日期、门票类型、数量、手机号）后调用此工具创建订单。" +
+         "参数说明：userId=用户ID（从会话中获取）, phone=手机号, orderType=订单类型（1=景点门票）, " +
+         "visitDate=游玩日期（格式：yyyy-MM-dd，必须是未来日期）, ticketId=门票ID, ticketName=门票名称, " +
+         "quantity=购买数量, price=门票单价")
+    public String createOrder(
+            Long userId,
+            String phone, 
+            Integer orderType,
+            String visitDate,
+            Long ticketId,
+            String ticketName,
+            Integer quantity,
+            Double price) {
+        try {
+            log.info("AI工具调用：创建订单 - userId={}, phone={}, visitDate={}, ticketId={}, quantity={}", 
+                    userId, phone, visitDate, ticketId, quantity);
+            
+            // 参数校验
+            if (userId == null || phone == null || visitDate == null || 
+                ticketId == null || ticketName == null || quantity == null || price == null) {
+                return "创建订单失败：参数不完整，请确保已收集用户的手机号、游玩日期、门票信息和数量";
+            }
+            
+            // 解析日期
+            LocalDate visit = LocalDate.parse(visitDate);
+            
+            // 构建订单明细
+            List<OrderItemDTO> orderItems = new ArrayList<>();
+            OrderItemDTO item = new OrderItemDTO();
+            item.setItemType(1); // 门票类型
+            item.setItemId(ticketId);
+            item.setItemName(ticketName);
+            item.setQuantity(quantity);
+            item.setPrice(new BigDecimal(price.toString()));
+            orderItems.add(item);
+            
+            // 构建订单DTO
+            OrderCreateDTO dto = new OrderCreateDTO();
+            dto.setUserId(userId);
+            dto.setPhone(phone);
+            dto.setOrderType(orderType != null ? orderType : 1); // 默认门票类型
+            dto.setVisitDate(visit);
+            dto.setOrderItems(orderItems);
+            
+            // 调用订单服务创建订单
+            String orderNo = orderService.createOrder(dto);
+            
+            // 计算总金额
+            BigDecimal totalAmount = new BigDecimal(price.toString()).multiply(new BigDecimal(quantity));
+            
+            return String.format("""
+                    ✅ 订单创建成功！
+                    
+                    📋 订单信息：
+                    订单号：%s
+                    门票：%s × %d张
+                    游玩日期：%s
+                    总金额：¥%.2f
+                    
+                    ⚠️ 重要提示：
+                    1. 订单已创建，请在30分钟内完成支付
+                    2. 支付后门票立即生效
+                    3. 游玩当天请出示订单供工作人员确认
+                    4. 若含学生票，请在游玩当前持学生证或提供学信网学籍信息
+                    
+                    💡 接下来请：
+                    - 前往"我的订单"完成支付
+                    - 支付方式：微信支付
+                    """, 
+                    orderNo, ticketName, quantity, visitDate, totalAmount.doubleValue());
+            
+        } catch (Exception e) {
+            log.error("AI工具调用失败：创建订单", e);
+            return "订单创建失败：" + e.getMessage() + "。请稍后重试或联系人工客服。";
         }
     }
 }
