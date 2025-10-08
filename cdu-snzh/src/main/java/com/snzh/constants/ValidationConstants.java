@@ -90,6 +90,8 @@ public class ValidationConstants {
 
     public static final String SCENIC_DISPLAY_ORDER_NOT_NULL = "景点展示顺序不能为空";
 
+    public static final String SPOT_TYPE_INCORRECT = "景点类型值不正确，只能是0（景区）或1（景点）";
+
     public static final String TICKET_TYPE_ID_NOT_NULL = "门票类型id不能为空";
 
     public static final String SOLD_COUNT_MUST_BE_POSITIVE = "销售数量不能为复数";

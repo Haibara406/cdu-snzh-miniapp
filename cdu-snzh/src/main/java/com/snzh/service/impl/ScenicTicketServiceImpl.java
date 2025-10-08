@@ -14,6 +14,7 @@ import com.snzh.domain.entity.TicketType;
 import com.snzh.domain.vo.PageVo;
 import com.snzh.domain.vo.ScenicTicketVO;
 import com.snzh.enums.RedisKeyManage;
+import com.snzh.enums.SpotTypeEnum;
 import com.snzh.enums.StatusEnum;
 import com.snzh.exceptions.*;
 import com.snzh.mapper.ScenicSpotMapper;
@@ -117,7 +118,8 @@ public class ScenicTicketServiceImpl extends ServiceImpl<ScenicTicketMapper, Sce
         if(!scenicSpotMapper.exists(
                 Wrappers.lambdaQuery(ScenicSpot.class)
                         .eq(ScenicSpot::getId, saveDTO.getScenicSpotId())
-                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()))){
+                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                        .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_AREA.getCode()))){
             throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
         }
 
@@ -156,7 +158,8 @@ public class ScenicTicketServiceImpl extends ServiceImpl<ScenicTicketMapper, Sce
         if(!scenicSpotMapper.exists(
                 Wrappers.lambdaQuery(ScenicSpot.class)
                         .eq(ScenicSpot::getId, saveDTO.getScenicSpotId())
-                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()))){
+                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                        .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_AREA.getCode()))){
             throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
         }
 

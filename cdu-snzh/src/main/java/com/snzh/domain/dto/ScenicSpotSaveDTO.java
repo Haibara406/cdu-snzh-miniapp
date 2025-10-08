@@ -25,6 +25,14 @@ public class ScenicSpotSaveDTO implements Serializable {
     @Schema(description = "景点id")
     private Long id;
 
+    @Schema(description = "父级景区ID（创建景点时可选，默认为1表示蜀南竹海）")
+    private Long parentId;
+
+    @Schema(description = "类型：0=景区（蜀南竹海）, 1=景点（默认）")
+    @Min(value = 0, message = ValidationConstants.SPOT_TYPE_INCORRECT)
+    @Max(value = 1, message = ValidationConstants.SPOT_TYPE_INCORRECT)
+    private Integer spotType;
+
     @Schema(description = "景点名称")
     @NotBlank(message = ValidationConstants.SCENIC_NAME_NOT_NULL)
     @Size(min = 2, max = 100, message = ValidationConstants.SCENIC_NAME_TOO_LONG)

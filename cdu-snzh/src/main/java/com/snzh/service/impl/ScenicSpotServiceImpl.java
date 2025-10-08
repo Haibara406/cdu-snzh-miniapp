@@ -2,6 +2,7 @@ package com.snzh.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -15,6 +16,7 @@ import com.snzh.domain.dto.ScenicSpotSaveDTO;
 import com.snzh.domain.entity.ScenicSpot;
 import com.snzh.domain.vo.*;
 import com.snzh.enums.RedisKeyManage;
+import com.snzh.enums.SpotTypeEnum;
 import com.snzh.enums.StatusEnum;
 import com.snzh.exceptions.*;
 import com.snzh.mapper.ScenicSpotMapper;
@@ -78,7 +80,11 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
     public List<ScenicSpotVO> getScenicSpotList() {
         List<ScenicSpotVO> scenicSpotVOList = redisCache.getValueIsList(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_SPOT_LIST), ScenicSpotVO.class);
         if(StringUtils.isEmpty(scenicSpotVOList)){
-            List<ScenicSpot> scenicSpotList = scenicSpotMapper.selectList(Wrappers.lambdaQuery(ScenicSpot.class).eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()));
+            List<ScenicSpot> scenicSpotList = scenicSpotMapper.selectList(
+                    Wrappers.lambdaQuery(ScenicSpot.class)
+                            .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                            .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode())
+                            .eq(ScenicSpot::getParentId, 1));
             if(StringUtils.isEmpty(scenicSpotList)){
                 throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
             }
@@ -95,7 +101,9 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
     public String getScenicMarkers() {
         List<ScenicSpot> scenicSpotList = scenicSpotMapper.selectList(
                 Wrappers.lambdaQuery(ScenicSpot.class)
-                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()));
+                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                        .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode())
+                        .eq(ScenicSpot::getParentId, 1));
         if(StringUtils.isEmpty(scenicSpotList)){
             return "";
         }
@@ -183,7 +191,9 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
         ScenicSpot scenicSpot = scenicSpotMapper
                 .selectOne(Wrappers.lambdaQuery(ScenicSpot.class)
                         .eq(ScenicSpot::getId, dto.getScenicId())
-                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()));
+                        .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                        .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode())
+                        .eq(ScenicSpot::getParentId, 1));
         if(StringUtils.isNull((scenicSpot))){
             throw new FacilityNotFoundException(ErrorConst.FACILITY_NOT_FOUND);
         }
@@ -274,7 +284,9 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
                             Wrappers.lambdaQuery(ScenicSpot.class)
                                     .select(ScenicSpot::getModel3dUrl)
                                     .eq(ScenicSpot::getId, scenicId)
-                                    .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode()))
+                                    .eq(ScenicSpot::getStatus, StatusEnum.RUN.getCode())
+                                    .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode())
+                                    .eq(ScenicSpot::getParentId, 1))
                     .getModel3dUrl();
             if(StringUtils.isEmpty(model3dUrl)){
                 throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
@@ -302,6 +314,7 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
                 wrapper.between(ScenicSpot::getCreateTime, dto.getCreateTimeStart(), dto.getCreateTimeEnd());
             }
         }
+        wrapper.eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode()).eq(ScenicSpot::getParentId, 1);
         IPage<ScenicSpot> scenicSpotPage = scenicSpotMapper.selectPage(page, wrapper);
         return PageUtil.convertPage(scenicSpotPage, scenicSpot -> BeanUtil.copyProperties(scenicSpot, ScenicSpotVO.class));
     }
@@ -319,6 +332,12 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
             throw new ScenicSpotHasExistException(ErrorConst.SCENIC_SPOT_HAS_EXIST);
         }
         ScenicSpot scenicSpot = BeanUtil.copyProperties(dto, ScenicSpot.class);
+        if(scenicSpot.getSpotType() == null){
+            scenicSpot.setSpotType(SpotTypeEnum.SCENIC_SPOT.getCode());
+        }
+        if(scenicSpot.getParentId() == null){
+            scenicSpot.setParentId(1L);
+        }
         scenicSpotMapper.insert(scenicSpot);
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_SPOT_LIST));
         return scenicSpot.getId();
@@ -372,7 +391,11 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateScenicSpotStatus(Long id, Integer status) {
-        ScenicSpot scenicSpot = scenicSpotMapper.selectOne(Wrappers.lambdaQuery(ScenicSpot.class).eq(ScenicSpot::getId, id));
+        ScenicSpot scenicSpot = scenicSpotMapper.selectOne(
+                Wrappers.lambdaQuery(ScenicSpot.class)
+                        .eq(ScenicSpot::getId, id)
+                        .eq(ScenicSpot::getSpotType, SpotTypeEnum.SCENIC_SPOT.getCode())
+                        .eq(ScenicSpot::getParentId, 1));
         if(StringUtils.isNull(scenicSpot)){
             throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
         }
@@ -383,6 +406,45 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_SPOT_DETAIL, id));
         redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_SPOT_LIST));
         return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean updateScenicArea(ScenicSpotSaveDTO dto) {
+        // 验证参数
+        if(StringUtils.isNull(dto)
+                || StringUtils.isEmpty(dto.getName())
+                || StringUtils.isNull(dto.getLongitude())
+                || StringUtils.isNull(dto.getLatitude())){
+            throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
+        }
+
+        // 验证景区是否存在
+        ScenicSpot scenicArea = scenicSpotMapper.selectOne(
+                Wrappers.lambdaQuery(ScenicSpot.class)
+                        .eq(ScenicSpot::getId, 1L)
+                        .eq(ScenicSpot::getSpotType, 0));
+
+        if(StringUtils.isNull(scenicArea)){
+            throw new ScenicSpotNotFoundException("蜀南竹海景区信息不存在");
+        }
+
+        // 更新景区信息
+        ScenicSpot updateEntity = new ScenicSpot();
+        BeanUtil.copyProperties(dto, updateEntity, CopyOptions.create().ignoreNullValue());
+        updateEntity.setId(1L);
+        updateEntity.setSpotType(SpotTypeEnum.SCENIC_AREA.getCode());
+        updateEntity.setParentId(null);
+
+        boolean result = updateById(updateEntity);
+
+        if(result){
+            // 清除缓存
+            redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_SPOT_DETAIL, 1L));
+            log.info("景区信息更新成功：{}", dto.getName());
+        }
+
+        return result;
     }
 
     /**

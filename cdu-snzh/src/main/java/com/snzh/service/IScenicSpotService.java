@@ -50,4 +50,6 @@ public interface IScenicSpotService extends IService<ScenicSpot> {
     Boolean deleteByIds(List<Long> ids);
 
     Boolean updateScenicSpotStatus(Long id, Integer status);
+
+    Boolean updateScenicArea(@Valid ScenicSpotSaveDTO dto);
 }

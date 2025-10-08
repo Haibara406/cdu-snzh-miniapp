@@ -35,6 +35,12 @@ public class ScenicSpot  extends BaseTableData implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    @Schema(description = "父级景区ID（NULL或1表示蜀南竹海，景点默认为1）")
+    private Long parentId;
+
+    @Schema(description = "类型：0=景区（蜀南竹海）, 1=景点（默认）")
+    private Integer spotType;
+
     @Schema(description = "景点名称")
     private String name;
 

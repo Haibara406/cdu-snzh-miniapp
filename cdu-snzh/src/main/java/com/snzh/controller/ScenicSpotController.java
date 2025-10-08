@@ -136,4 +136,10 @@ public class ScenicSpotController {
             @PathVariable("status") @Parameter(description = "状态：0=禁用，1=正常") Integer status) {
         return ResponseResult.success(scenicSpotService.updateScenicSpotStatus(id, status));
     }
+
+    @PutMapping("/area/update")
+    @Operation(summary = "更新景区信息", description = "更新蜀南竹海景区信息")
+    public ResponseResult<Boolean> updateScenicArea(@Valid @RequestBody ScenicSpotSaveDTO dto) {
+        return ResponseResult.success(scenicSpotService.updateScenicArea(dto));
+    }
 }
