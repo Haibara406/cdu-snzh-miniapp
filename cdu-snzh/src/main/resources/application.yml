@@ -113,7 +113,7 @@ ai:
     # 温度参数（0-1），越高越随机，建议0.7
     temperature: 0.7
     # 最大Token数
-    max-tokens: 2000
+    max-tokens: 5000
   chat:
     # 最大保留历史消息数
     max-history: 20
