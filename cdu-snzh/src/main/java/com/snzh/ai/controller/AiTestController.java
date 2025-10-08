@@ -30,7 +30,7 @@ public class AiTestController {
     private final IAiChatService aiChatService;
 
     /**
-     * 默认测试用户ID（用于测试环境）
+     * 默认测试用户ID
      */
     private static final Long TEST_USER_ID = 999999L;
 
