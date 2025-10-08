@@ -683,7 +683,8 @@ public class AiChatServiceImpl implements IAiChatService {
      */
     private List<ChatMessage> loadChatHistory(String sessionId) {
         RedisKeyBuild cacheKey = RedisKeyBuild.createKey(RedisKeyManage.AI_CHAT_MEMORY, sessionId);
-        List<AiChatMessage> cachedMessages = redisCache.getValueIsList(cacheKey, AiChatMessage.class);
+        // 使用 rangeForList 读取 Redis List 类型数据（与 rightPushForList 对应）
+        List<AiChatMessage> cachedMessages = redisCache.rangeForList(cacheKey, 0, -1, AiChatMessage.class);
 
         List<AiChatMessage> messages;
         if (cachedMessages != null && !cachedMessages.isEmpty()) {

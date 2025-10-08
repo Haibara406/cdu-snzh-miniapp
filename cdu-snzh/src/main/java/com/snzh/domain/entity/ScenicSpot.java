@@ -1,6 +1,7 @@
 package com.snzh.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -11,6 +12,7 @@ import com.snzh.domain.base.BaseTableData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -24,6 +26,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @TableName("scenic_spot")
 @Schema(description = "景点实体类")
 public class ScenicSpot  extends BaseTableData implements Serializable {
@@ -60,6 +63,7 @@ public class ScenicSpot  extends BaseTableData implements Serializable {
     private String address;
 
     @Schema(description = "3D模型链接")
+    @TableField("model_3d_url")
     private String model3dUrl;
 
     @Schema(description = "展示顺序")
