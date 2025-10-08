@@ -2,6 +2,8 @@ package com.snzh.ai.tools;
 
 import com.snzh.domain.dto.OrderCreateDTO;
 import com.snzh.domain.dto.OrderItemDTO;
+import com.snzh.domain.vo.CastVO;
+import com.snzh.domain.vo.ForecastWeatherVO;
 import com.snzh.domain.vo.LiveWeatherVO;
 import com.snzh.domain.vo.ScenicSpotVO;
 import com.snzh.domain.vo.ScenicTicketVO;
@@ -35,9 +37,13 @@ public class AiToolService {
     private final IOrderService orderService;
 
     /**
-     * 查询当前天气
+     * 查询当前实时天气
      */
-    @Tool("查询蜀南竹海景区所在地（长宁县）的实时天气信息")
+    @Tool("查询蜀南竹海景区所在地（长宁县）的当前实时天气信息。" +
+         "无需参数，直接调用即可获取当前时刻的天气状况。" +
+         "返回内容包括：实时天气状况、当前温度、风向、风力、湿度等信息。" +
+         "适用场景：用户询问'现在天气如何'、'今天天气怎么样'、'当前温度多少'等实时天气查询。" +
+         "注意：此工具仅返回实时天气，如需查询未来天气预报，请使用queryForecastWeather工具。")
     public String queryWeather() {
         try {
             LiveWeatherVO weather = weatherService.getLiveWeather();
@@ -60,9 +66,55 @@ public class AiToolService {
     }
 
     /**
+     * 查询未来天气预报
+     */
+    @Tool("查询蜀南竹海景区所在地（长宁县）未来一周的天气预报。" +
+         "无需参数，直接调用即可获取未来3-7天的天气预报信息。" +
+         "返回内容包括：未来每一天的日期、星期、白天/夜间天气、温度范围、风向、风力等详细信息。" +
+         "适用场景：用户询问'明天天气如何'、'后天会下雨吗'、'这周末天气怎么样'、'未来几天天气'、" +
+         "'什么时候适合去玩'等未来天气查询，特别适合用户提前规划行程。" +
+         "注意：此工具返回未来天气预报，如需查询当前实时天气，请使用queryWeather工具。")
+    public String queryForecastWeather() {
+        try {
+            ForecastWeatherVO forecast = weatherService.getForecastWeather();
+            if (forecast == null || forecast.getCasts() == null || forecast.getCasts().isEmpty()) {
+                return "天气预报信息暂时无法获取";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("📅 ").append(forecast.getCity()).append("未来天气预报：\n");
+            sb.append("（数据更新时间：").append(forecast.getReporttime()).append("）\n\n");
+
+            for (CastVO cast : forecast.getCasts()) {
+                sb.append("📍 ").append(cast.getDate()).append(" ").append(cast.getWeek()).append("\n");
+                sb.append("  白天：").append(cast.getDayweather())
+                        .append("，").append(cast.getDaytemp()).append("℃")
+                        .append("，").append(cast.getDaywind())
+                        .append(cast.getDaypower()).append("级\n");
+                sb.append("  夜间：").append(cast.getNightweather())
+                        .append("，").append(cast.getNighttemp()).append("℃")
+                        .append("，").append(cast.getNightwind())
+                        .append(cast.getNightpower()).append("级\n");
+                sb.append("\n");
+            }
+
+            sb.append("💡 温馨提示：根据天气情况合理安排出行时间，雨天注意防滑和携带雨具。");
+
+            return sb.toString();
+        } catch (Exception e) {
+            log.error("查询天气预报失败", e);
+            return "天气预报查询失败，请稍后重试";
+        }
+    }
+
+    /**
      * 查询景点详情
      */
-    @Tool("根据景点ID查询景点的详细信息，包括名称、描述、位置、门票等")
+    @Tool("根据景点ID查询指定景点的详细信息。" +
+         "参数说明：scenicId=景点ID（必填，Long类型，需要先通过listAllScenics获取景点列表及其ID）。" +
+         "返回内容包括：景点名称、详细描述、具体地址、关联的门票价格及销售情况等。" +
+         "适用场景：用户询问某个具体景点的详细信息、想了解景点特色、查询门票价格等。" +
+         "注意：如果用户未指定景点，应先调用listAllScenics展示景点列表让用户选择。")
     public String getScenicDetail(Long scenicId) {
         try {
             ScenicSpotVO scenic = scenicSpotService.getScenicSpotDetail(scenicId);
@@ -99,7 +151,11 @@ public class AiToolService {
     /**
      * 查询所有景点列表
      */
-    @Tool("查询所有景点的基本信息列表")
+    @Tool("查询蜀南竹海景区内所有景点的基本信息列表。" +
+         "无需参数，直接调用即可获取完整景点列表。" +
+         "返回内容包括：每个景点的名称、简介（前100字）、地址等基本信息。" +
+         "适用场景：用户询问景区有哪些景点、想要景点推荐、计划游玩路线、或需要景点概览等。" +
+         "提示：如需查看某个景点的详细信息，可使用返回的景点信息配合getScenicDetail工具进一步查询。")
     public String listAllScenics() {
         try {
             List<ScenicSpotVO> scenics = scenicSpotService.getScenicSpotList();
@@ -128,7 +184,11 @@ public class AiToolService {
     /**
      * 查询所有在售门票
      */
-    @Tool("查询所有在售门票的类型和价格信息")
+    @Tool("查询景区内所有景点当前在售的门票类型、价格及销售情况。" +
+         "无需参数，直接调用即可获取完整门票列表。" +
+         "返回内容包括：按景点分组的门票信息，包含价格、已售数量等。" +
+         "适用场景：用户询问门票价格、想了解各景点票价、购票前查询、或需要价格对比等。" +
+         "注意：返回的是实时在售门票，价格可能根据季节或活动有所变化。建议在用户明确购买意向后再次确认价格。")
     public String listAvailableTickets() {
         try {
             // 先获取所有景点，然后查询每个景点的门票
@@ -165,7 +225,12 @@ public class AiToolService {
      * 推荐游玩路线
      * 注：这是简化版本，实际可以集成更复杂的路径规划算法
      */
-    @Tool("根据用户的游玩时长推荐合适的游玩路线")
+    @Tool("根据用户的游玩时长智能推荐合适的游玩路线和行程安排。" +
+         "参数说明：duration=游玩时长描述（必填，String类型，例如：'一天'、'半天'、'4小时'、'上午'、'下午'等）。" +
+         "返回内容包括：详细的分时段行程安排、推荐景点、预计游览时间、温馨提示等。" +
+         "适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线等。" +
+         "路线类型：支持半日游（4小时）、一日游（全天）和多日游，会根据时长自动匹配最优路线。" +
+         "注意：如果用户未明确说明游玩时长，应主动询问以便提供更准确的路线建议。")
     public String recommendRoute(String duration) {
         if (duration.contains("一天") || duration.contains("1天") || duration.contains("全天")) {
             return """

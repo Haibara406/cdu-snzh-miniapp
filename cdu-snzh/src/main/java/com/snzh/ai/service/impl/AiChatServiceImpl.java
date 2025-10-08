@@ -204,8 +204,13 @@ public class AiChatServiceImpl implements IAiChatService {
             
             return switch (toolName) {
                 case "queryWeather" -> {
-                    // 天气查询无需参数
+                    // 实时天气查询：无需参数
                     yield aiToolService.queryWeather();
+                }
+                
+                case "queryForecastWeather" -> {
+                    // 天气预报查询：无需参数
+                    yield aiToolService.queryForecastWeather();
                 }
                 
                 case "getScenicDetail" -> {
