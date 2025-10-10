@@ -19,8 +19,6 @@ import com.snzh.enums.SpotTypeEnum;
 import com.snzh.enums.StatusEnum;
 import com.snzh.exceptions.*;
 import com.snzh.mapper.ScenicSpotMapper;
-import com.snzh.mapper.ScenicTicketMapper;
-import com.snzh.mapper.TicketTypeMapper;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
 import com.snzh.service.IScenicSpotService;
@@ -53,8 +51,6 @@ import java.util.concurrent.TimeUnit;
 public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicSpot> implements IScenicSpotService {
 
     private final ScenicSpotMapper scenicSpotMapper;
-    private final ScenicTicketMapper scenicTicketMapper;
-    private final TicketTypeMapper ticketTypeMapper;
     private final RedisCache redisCache;
     private final GaodeMapUtil gaodeMapUtil;
 
