@@ -108,7 +108,10 @@ public class TicketTypeServiceImpl extends ServiceImpl<TicketTypeMapper, TicketT
         if(StringUtils.isNull(ticketType)){
             throw new TicketTypeNotFoundException(ErrorConst.TICKET_TYPE_NOT_EXIST);
         }
-        if(!ticketTypeMapper.exists(Wrappers.lambdaQuery(TicketType.class).eq(TicketType::getName, saveDTO.getName()))){
+        if(ticketTypeMapper.exists(
+                Wrappers.lambdaQuery(TicketType.class)
+                        .eq(TicketType::getName, saveDTO.getName())
+                        .ne(TicketType::getId, saveDTO.getId()))){
             throw new TicketTypeHasExistException(ErrorConst.TICKET_TYPE_HAS_EXIST);
         }
         BeanUtil.copyProperties(saveDTO, ticketType, CopyOptions.create().ignoreNullValue());

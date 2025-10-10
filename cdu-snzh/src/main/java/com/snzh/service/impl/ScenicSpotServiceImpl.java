@@ -2,7 +2,6 @@ package com.snzh.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
-import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -328,7 +327,11 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
                 || StringUtils.isNull(dto.getLongitude())){
             throw new DataNotExistException(ErrorConst.DATA_NOT_FOUND);
         }
-        if(scenicSpotMapper.exists(Wrappers.lambdaQuery(ScenicSpot.class).eq(ScenicSpot::getId, dto.getId()))){
+        if(scenicSpotMapper.exists(
+                Wrappers.lambdaQuery(ScenicSpot.class)
+                        .eq(ScenicSpot::getLatitude, dto.getLatitude())
+                        .eq(ScenicSpot::getLongitude, dto.getLongitude())
+                        .eq(ScenicSpot::getName, dto.getName()))){
             throw new ScenicSpotHasExistException(ErrorConst.SCENIC_SPOT_HAS_EXIST);
         }
         ScenicSpot scenicSpot = BeanUtil.copyProperties(dto, ScenicSpot.class);
@@ -355,17 +358,18 @@ public class ScenicSpotServiceImpl extends ServiceImpl<ScenicSpotMapper, ScenicS
         if(StringUtils.isNull(dto.getId())){
             throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_ID_NOT_NULL);
         }
-        if(scenicSpotMapper.exists(
-                Wrappers.lambdaQuery(ScenicSpot.class)
-                        .eq(ScenicSpot::getLatitude, dto.getLatitude())
-                        .eq(ScenicSpot::getLongitude, dto.getLongitude())
-                        .eq(ScenicSpot::getName, dto.getName()))){
-            throw new ScenicSpotHasExistException(ErrorConst.SCENIC_SPOT_HAS_EXIST);
-        }
         if(!scenicSpotMapper.exists(
                 Wrappers.lambdaQuery(ScenicSpot.class)
                         .eq(ScenicSpot::getId, dto.getId()))){
             throw new ScenicSpotNotFoundException(ErrorConst.SCENIC_SPOT_NOT_FOUND);
+        }
+        if(scenicSpotMapper.exists(
+                Wrappers.lambdaQuery(ScenicSpot.class)
+                        .eq(ScenicSpot::getLatitude, dto.getLatitude())
+                        .eq(ScenicSpot::getLongitude, dto.getLongitude())
+                        .eq(ScenicSpot::getName, dto.getName())
+                        .ne(ScenicSpot::getId, dto.getId()))){
+            throw new ScenicSpotHasExistException(ErrorConst.SCENIC_SPOT_HAS_EXIST);
         }
         ScenicSpot scenicSpot = new ScenicSpot();
         BeanUtil.copyProperties(dto, scenicSpot, CopyOptions.create().ignoreNullValue());
