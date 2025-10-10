@@ -1,4 +1,4 @@
-package com.snzh.ai.controller;
+package com.snzh.test;
 
 import com.snzh.ai.domain.dto.AiChatRequestDTO;
 import com.snzh.ai.domain.vo.AiChatResponseVO;
