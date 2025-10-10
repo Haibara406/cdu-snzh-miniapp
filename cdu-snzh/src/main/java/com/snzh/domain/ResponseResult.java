@@ -66,6 +66,13 @@ public class ResponseResult<T> {
     }
 
     /**
+     * 失败响应，需要返回数据
+     */
+    public static <T> ResponseResult<T> failure(Integer code, String msg, T data) {
+        return new ResponseResult<>(code, msg, data);
+    }
+
+    /**
      * 失败响应，不需要返回数据
      */
     public static <T> ResponseResult<T> failure() {
