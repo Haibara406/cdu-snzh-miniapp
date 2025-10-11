@@ -1,0 +1,36 @@
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/cdu_snzh_miniapp?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+  data:
+    redis:
+      host: 8.156.75.132
+      password: Ww249260523..
+
+minio:
+  endpoint: http://8.156.75.132:9000
+  accessKey: haibara
+  secretKey: Ww249260523..
+
+snzh:
+  wechat:
+    appid: wxbc43db1ef4db8827
+    secret: 03c8c9e86330e8ed7e0edae80d794756
+    mchid: 1561414331
+    mchSerialNo: 4B3B3DC35414AD50B1B755BAF8DE9CC7CF407606
+    privateKeyFilePath: D:\apiclient_key.pem
+    apiV3Key: CZBK51236435wxpay435434323FFDuv3
+    weChatPayCertFilePath: D:\wechatpay_166D96F876F45C7D07CE98952A96EC980368ACFC.pem
+    notifyUrl: https://www.weixin.qq.com/wxpay/pay.php
+    refundNotifyUrl: https://www.weixin.qq.com/wxpay/pay.php
+  gaode:
+    key: dae1412666dc00d4f9660b4e558396b1
+  jwt:
+    secret: HAIBaRaIIISasukE#cDUshUNanZHuhAi
+
+ai:
+  llm:
+    api-key: sk-156f588ab5a04ac0918bbb28bcdd7113
+

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### 敏感配置文件 ###
+# 包含敏感信息的本地配置文件，不应提交到代码仓库
+**/application-local.yml
+**/application-local.properties
