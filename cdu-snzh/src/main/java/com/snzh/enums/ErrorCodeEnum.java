@@ -16,13 +16,22 @@ public enum ErrorCodeEnum {
     DATA_NOT_EXIST(2001, "数据不存在"),
     PARAM_ERROR(2002, "参数错误"),
 
-    // ==================== 用户相关 2100-2199 ====================
+    // ==================== 用户相关 2100-2149 ====================
     ACCOUNT_NOT_FOUND(2100, "账号不存在"),
     ACCOUNT_LOCKED(2101, "账号已被锁定"),
     LOGIN_FAILED(2102, "登录失败"),
     GET_PHONE_NUMBER_FAILED(2103, "获取手机号失败"),
     UNAUTHORIZED(2104, "无权限访问"),
     ADMIN_LOGIN_FAILED(2105, "管理员登录失败"),
+
+    // ==================== 管理员相关 2150-2199 ====================
+    ADMIN_USER_ERROR(2150, "管理员操作异常"),
+    ADMIN_NOT_FOUND(2151, "管理员不存在"),
+    ADMIN_USERNAME_EXISTS(2152, "管理员用户名已存在"),
+    CANNOT_DELETE_SUPER_ADMIN(2153, "不能删除超级管理员"),
+    CANNOT_DISABLE_SUPER_ADMIN(2154, "不能禁用超级管理员"),
+    CANNOT_DELETE_SELF(2155, "不能删除自己的账号"),
+    CANNOT_DISABLE_SELF(2156, "不能禁用自己的账号"),
 
     // ==================== 基础设施相关 2200-2299 ====================
     FACILITY_NOT_FOUND(2200, "基础设施不存在"),

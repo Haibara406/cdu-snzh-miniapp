@@ -10,7 +10,7 @@ import com.snzh.enums.ErrorCodeEnum;
 public class AdminUserException extends BaseException {
     
     public AdminUserException(String message) {
-        super(ErrorCodeEnum.BUSINESS_ERROR.getCode(), message);
+        super(ErrorCodeEnum.ADMIN_USER_ERROR.getCode(), message);
     }
 
     public AdminUserException(Integer code, String message) {

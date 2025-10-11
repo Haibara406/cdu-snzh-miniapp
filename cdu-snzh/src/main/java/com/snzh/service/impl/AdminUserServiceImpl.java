@@ -112,7 +112,7 @@ public class AdminUserServiceImpl implements IAdminUserService {
         if (StringUtils.isNotEmpty(currentUserIdStr)) {
             Long currentAdminId = Long.valueOf(currentUserIdStr);
             if (adminIds.contains(currentAdminId)) {
-                throw new AdminUserException("不能删除自己的账号");
+                throw new AdminUserException(ErrorConst.CANNOT_DELETE_SELF);
             }
         }
 
@@ -141,7 +141,7 @@ public class AdminUserServiceImpl implements IAdminUserService {
         if (StringUtils.isNotEmpty(currentUserIdStr)) {
             Long currentAdminId = Long.valueOf(currentUserIdStr);
             if (currentAdminId.equals(adminId) && StatusEnum.STOP.getCode().equals(status)) {
-                throw new AdminUserException("不能禁用自己的账号");
+                throw new AdminUserException(ErrorConst.CANNOT_DISABLE_SELF);
             }
         }
 

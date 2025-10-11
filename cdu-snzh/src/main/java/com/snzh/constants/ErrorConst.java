@@ -199,4 +199,10 @@ public class ErrorConst {
 
     /** 不能禁用超级管理员 */
     public static final String CANNOT_DISABLE_SUPER_ADMIN = "不能禁用超级管理员";
+
+    /** 不能删除自己的账号 */
+    public static final String CANNOT_DELETE_SELF = "不能删除自己的账号";
+
+    /** 不能禁用自己的账号 */
+    public static final String CANNOT_DISABLE_SELF = "不能禁用自己的账号";
 }
