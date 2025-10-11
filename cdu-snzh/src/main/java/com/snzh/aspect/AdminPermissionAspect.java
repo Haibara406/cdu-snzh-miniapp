@@ -1,6 +1,7 @@
 package com.snzh.aspect;
 
 import com.snzh.annotation.RequireAdmin;
+import com.snzh.constants.BusinessConst;
 import com.snzh.constants.ErrorConst;
 import com.snzh.exceptions.UnauthorizedException;
 import com.snzh.threadlocal.UserContext;
@@ -40,7 +41,7 @@ public class AdminPermissionAspect {
         String userType = UserContext.get("userType");
         
         // 验证是否为管理员
-        if (!"ADMIN".equals(userType)) {
+        if (!BusinessConst.UserType.ADMIN.equals(userType)) {
             log.warn("非管理员用户尝试访问管理端接口：{}", joinPoint.getSignature());
             throw new UnauthorizedException(ErrorConst.REQUIRE_ADMIN_PERMISSION);
         }
@@ -60,8 +61,8 @@ public class AdminPermissionAspect {
             String roleTypeStr = UserContext.get("roleType");
             Integer roleType = roleTypeStr != null ? Integer.valueOf(roleTypeStr) : null;
             
-            // 0 = 超级管理员
-            if (roleType == null || roleType != 0) {
+            // 超级管理员角色验证
+            if (roleType == null || !BusinessConst.RoleType.SUPER_ADMIN.equals(roleType)) {
                 log.warn("非超级管理员尝试访问超管接口：{}", joinPoint.getSignature());
                 throw new UnauthorizedException(ErrorConst.REQUIRE_SUPER_ADMIN_PERMISSION);
             }

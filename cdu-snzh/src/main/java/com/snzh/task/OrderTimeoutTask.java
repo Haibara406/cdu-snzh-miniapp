@@ -1,6 +1,7 @@
 package com.snzh.task;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.snzh.constants.BusinessConst;
 import com.snzh.domain.entity.Order;
 import com.snzh.enums.OrderStatusEnum;
 import com.snzh.mapper.OrderMapper;
@@ -43,7 +44,7 @@ public class OrderTimeoutTask {
                             .eq(Order::getOrderStatus, OrderStatusEnum.PENDING.getCode())
                             .lt(Order::getExpireTime, LocalDateTime.now())
                             .orderByAsc(Order::getExpireTime)
-                            .last("LIMIT 1000") // 一次最多处理1000条
+                            .last("LIMIT " + BusinessConst.Limit.DEFAULT_BATCH_LIMIT) // 一次最多处理限制数量
             );
 
             if (expiredOrders.isEmpty()) {
@@ -95,8 +96,8 @@ public class OrderTimeoutTask {
                             .eq(Order::getOrderStatus, OrderStatusEnum.PAID.getCode())
                             .le(Order::getVisitDate, yesterday)
                             .orderByAsc(Order::getVisitDate)
-                            // 一次最多处理1000条
-                            .last("LIMIT 1000")
+                            // 一次最多处理限制数量
+                            .last("LIMIT " + BusinessConst.Limit.DEFAULT_BATCH_LIMIT)
             );
 
             if (expiredVisitOrders.isEmpty()) {

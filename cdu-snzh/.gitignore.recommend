@@ -1,0 +1,55 @@
+# ===================================================================
+# 推荐的.gitignore配置（用于保护敏感信息）
+# 使用方法：将此文件内容添加到项目根目录的.gitignore文件中
+# ===================================================================
+
+# 敏感配置文件 - 重要！
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+src/main/resources/application-dev.yml
+
+# 微信支付证书 - 重要！
+*.pem
+apiclient_key.pem
+wechatpay_*.pem
+
+# 日志文件
+logs/
+*.log
+*.log.*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.DS_Store
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# 数据库
+*.db
+*.sqlite
+
+# 安全提示
+# ===================================================================
+# 1. 使用环境变量管理敏感配置
+# 2. 使用 Spring Cloud Config 或类似服务管理配置
+# 3. 使用 Jasypt 加密敏感配置
+# 4. 不要将敏感信息提交到版本控制系统
+# ===================================================================
+

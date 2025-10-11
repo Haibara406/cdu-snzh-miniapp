@@ -51,7 +51,6 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
     private static final int LOCK_TIME_MINUTES = 30;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public AdminLoginVO login(AdminLoginDTO loginDTO, HttpServletRequest request) {
         String ipAddr = IpUtils.getIpAddr(request);
         RedisKeyBuild loginFailKey = RedisKeyBuild.createKey(RedisKeyManage.ADMIN_LOGIN_FAIL, loginDTO.getUsername());
@@ -96,10 +95,8 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
         // 4. 登录成功，清除失败记录
         redisCache.del(loginFailKey);
 
-        // 5. 更新登录信息
-        adminUser.setLastLoginTime(LocalDateTime.now());
-        adminUser.setLastLoginIp(ipAddr);
-        adminUserMapper.updateById(adminUser);
+        // 5. 更新登录信息（仅数据库操作使用事务）
+        updateLoginInfo(adminUser, ipAddr);
 
         // 6. 生成Token
         String accessToken = jwtUtil.generateAdminAccessToken(
@@ -127,6 +124,16 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
                 .username(adminUser.getUsername())
                 .realName(adminUser.getRealName())
                 .build();
+    }
+
+    /**
+     * 更新登录信息（事务方法）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateLoginInfo(AdminUser adminUser, String ipAddr) {
+        adminUser.setLastLoginTime(LocalDateTime.now());
+        adminUser.setLastLoginIp(ipAddr);
+        adminUserMapper.updateById(adminUser);
     }
 
     /**

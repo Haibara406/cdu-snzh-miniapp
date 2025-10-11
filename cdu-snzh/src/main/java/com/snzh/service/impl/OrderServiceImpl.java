@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.snzh.constants.BusinessConst;
 import com.snzh.constants.ErrorConst;
 import com.snzh.domain.dto.*;
 import com.snzh.domain.entity.Order;
@@ -289,8 +290,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 分页查询
         IPage<Order> orderPage = orderMapper.selectPage(page, wrapper);
 
-        // 转换为VO
-        return PageUtil.convertPage(orderPage, this::convertToOrderListVO);
+        // 批量转换为VO（解决N+1查询问题）
+        return convertToOrderListPageVo(orderPage);
     }
 
     @Override
@@ -328,38 +329,74 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 生成订单号
-     * 格式：SNZH_ORDER + yyyyMMddHHmmss + 4位随机数
+     * 格式：SNZH_ORDER + yyyyMMddHHmmss + 6位随机数（使用UUID保证唯一性）
      */
     private String generateOrderNo() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String random = String.format("%04d", new Random().nextInt(10000));
-        return "SNZH_ORDER" + timestamp + random;
+        // 使用UUID的hashCode确保唯一性，取绝对值后6位
+        String uniqueId = String.format("%06d", Math.abs(UUID.randomUUID().hashCode() % 1000000));
+        return "SNZH_ORDER" + timestamp + uniqueId;
     }
 
     /**
-     * 更新门票销量
+     * 更新门票销量（批量优化版本）
      * @param orderId 订单ID
      * @param isAdd true-增加销量，false-减少销量
      */
     private void updateTicketSoldCount(Long orderId, boolean isAdd) {
         List<OrderItemVO> orderItems = orderItemService.getByOrderId(orderId);
-        for (OrderItemVO item : orderItems) {
-            if (item.getItemType().equals(ItemTypeEnum.TICKET.getCode())) {
-                ScenicTicket ticket = scenicTicketMapper.selectById(item.getItemId());
-                if (StringUtils.isNull(ticket)) {
-                    throw new ScenicTicketNotFoundException(ErrorConst.SCENIC_TICKET_NOT_FOUND);
-                }
+        
+        // 筛选出门票类型的订单项
+        List<OrderItemVO> ticketItems = orderItems.stream()
+                .filter(item -> item.getItemType().equals(ItemTypeEnum.TICKET.getCode()))
+                .collect(Collectors.toList());
+        
+        if (ticketItems.isEmpty()) {
+            return;
+        }
+        
+        // 批量查询门票信息
+        List<Long> ticketIds = ticketItems.stream()
+                .map(OrderItemVO::getItemId)
+                .collect(Collectors.toList());
+        List<ScenicTicket> tickets = scenicTicketMapper.selectBatchIds(ticketIds);
+        
+        if (tickets.isEmpty()) {
+            throw new ScenicTicketNotFoundException(ErrorConst.SCENIC_TICKET_NOT_FOUND);
+        }
+        
+        // 构建门票ID到数量的映射
+        Map<Long, Integer> ticketQuantityMap = ticketItems.stream()
+                .collect(Collectors.toMap(OrderItemVO::getItemId, OrderItemVO::getQuantity));
+        
+        // 批量更新销量
+        List<ScenicTicket> ticketsToUpdate = new ArrayList<>();
+        List<RedisKeyBuild> cacheKeysToDelete = new ArrayList<>();
+        
+        for (ScenicTicket ticket : tickets) {
+            Integer quantity = ticketQuantityMap.get(ticket.getId());
+            if (quantity != null) {
                 int newCount = isAdd
-                        ? ticket.getSoldCount() + item.getQuantity()
-                        : ticket.getSoldCount() - item.getQuantity();
+                        ? ticket.getSoldCount() + quantity
+                        : ticket.getSoldCount() - quantity;
                 // 防止负数
                 ticket.setSoldCount(Math.max(0, newCount));
-                scenicTicketMapper.updateById(ticket);
-
-                // 清除门票缓存
-                redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_TICKET_DETAIL, ticket.getId()));
-                redisCache.del(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_TICKET_FOR_SPOT, ticket.getScenicSpotId()));
+                ticketsToUpdate.add(ticket);
+                
+                // 收集需要清除的缓存key
+                cacheKeysToDelete.add(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_TICKET_DETAIL, ticket.getId()));
+                cacheKeysToDelete.add(RedisKeyBuild.createKey(RedisKeyManage.SCENIC_TICKET_FOR_SPOT, ticket.getScenicSpotId()));
             }
+        }
+        
+        // 批量更新数据库
+        if (!ticketsToUpdate.isEmpty()) {
+            ticketsToUpdate.forEach(ticket -> scenicTicketMapper.updateById(ticket));
+        }
+        
+        // 批量清除缓存
+        if (!cacheKeysToDelete.isEmpty()) {
+            redisCache.del(cacheKeysToDelete);
         }
     }
 
@@ -393,6 +430,44 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         vo.setItemCount(itemCount.intValue());
 
         return vo;
+    }
+
+    /**
+     * 批量转换订单列表VO（优化版，解决N+1查询问题）
+     */
+    private PageVo<OrderListVO> convertToOrderListPageVo(IPage<Order> orderPage) {
+        List<Order> orders = orderPage.getRecords();
+        if (orders.isEmpty()) {
+            return PageUtil.convertPage(orderPage, this::convertToOrderListVO);
+        }
+        
+        // 批量查询所有订单的明细数量
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+        List<OrderItem> allItems = orderItemService.lambdaQuery()
+                .in(OrderItem::getOrderId, orderIds)
+                .select(OrderItem::getOrderId)
+                .list();
+        
+        // 统计每个订单的明细数量
+        Map<Long, Long> orderItemCountMap = allItems.stream()
+                .collect(Collectors.groupingBy(OrderItem::getOrderId, Collectors.counting()));
+        
+        // 转换VO
+        List<OrderListVO> voList = orders.stream().map(order -> {
+            OrderListVO vo = BeanUtil.copyProperties(order, OrderListVO.class);
+            vo.setOrderTypeDesc(OrderTypeEnum.getMsg(order.getOrderType()));
+            vo.setOrderStatusDesc(OrderStatusEnum.getMsg(order.getOrderStatus()));
+            vo.setItemCount(orderItemCountMap.getOrDefault(order.getId(), 0L).intValue());
+            return vo;
+        }).collect(Collectors.toList());
+        
+        // 使用构造函数创建 PageVo（因为 PageVo 没有 @Builder 注解）
+        return new PageVo<>(
+                orderPage.getCurrent(),
+                orderPage.getSize(),
+                orderPage.getTotal(),
+                voList
+        );
     }
 
     /**
@@ -438,25 +513,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Map<Integer, Long> countUserOrdersByStatus(Long userId) {
-        log.info("开始统计用户订单数量，用户ID：{}", userId);
+        log.debug("开始统计用户订单数量，用户ID：{}", userId);
 
-        // 1. 查询所有订单状态
-        List<Order> orders = orderMapper.selectList(
-                Wrappers.lambdaQuery(Order.class)
-                        .eq(Order::getUserId, userId)
-                        .select(Order::getOrderStatus)
-        );
+        // 使用数据库聚合查询（优化后）
+        List<Map<String, Object>> resultList = orderMapper.countByStatusForUser(userId);
+        Map<Integer, Long> statusCountMap = resultList.stream()
+                .collect(Collectors.toMap(
+                        map -> (Integer) map.get("statusCode"),
+                        map -> ((Number) map.get("count")).longValue()
+                ));
 
-        // 2. 按状态分组统计
-        Map<Integer, Long> statusCountMap = orders.stream()
-                .collect(Collectors.groupingBy(Order::getOrderStatus, Collectors.counting()));
-
-        // 3. 补充0的状态（前端展示需要）
+        // 补充0的状态（前端展示需要）
         for (OrderStatusEnum statusEnum : OrderStatusEnum.values()) {
             statusCountMap.putIfAbsent(statusEnum.getCode(), 0L);
         }
 
-        log.info("用户{}订单统计完成：{}", userId, statusCountMap);
+        log.debug("用户{}订单统计完成：{}", userId, statusCountMap);
         return statusCountMap;
     }
 
@@ -725,7 +797,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             try {
                 boolean success = false;
                 switch (dto.getOperation()) {
-                    case "cancel":
+                    case BusinessConst.BatchOperation.CANCEL:
                         Order order = getById(orderId);
                         if (order != null) {
                             AdminCancelDTO cancelDTO = new AdminCancelDTO();
@@ -734,7 +806,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                             success = adminCancelOrder(cancelDTO);
                         }
                         break;
-                    case "refund":
+                    case BusinessConst.BatchOperation.REFUND:
                         order = getById(orderId);
                         if (order != null) {
                             AdminRefundDTO refundDTO = new AdminRefundDTO();
@@ -744,7 +816,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                             success = adminRefund(refundDTO);
                         }
                         break;
-                    case "complete":
+                    case BusinessConst.BatchOperation.COMPLETE:
                         success = adminCompleteOrder(orderId);
                         break;
                     default:
@@ -768,9 +840,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public OrderDashboardVO getDashboard() {
         log.info("获取数据看板");
 
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime tomorrow = today.plusDays(1);
-        LocalDateTime monthStart = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime[] todayRange = getTodayDateRange();
+        LocalDateTime today = todayRange[0];
+        LocalDateTime tomorrow = todayRange[1];
+        LocalDateTime monthStart = getMonthStart();
 
         // ========== 今日数据 ==========
         Integer todayTotal = Math.toIntExact(lambdaQuery()
@@ -921,14 +994,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Map<Integer, Long> getStatusDistribution() {
-        log.info("获取订单状态分布统计");
+        log.debug("获取订单状态分布统计");
 
-        List<Order> orders = orderMapper.selectList(
-                Wrappers.lambdaQuery(Order.class).select(Order::getOrderStatus)
-        );
-
-        Map<Integer, Long> statusMap = orders.stream()
-                .collect(Collectors.groupingBy(Order::getOrderStatus, Collectors.counting()));
+        // 使用数据库聚合查询（优化后）
+        List<Map<String, Object>> resultList = orderMapper.countByStatus();
+        Map<Integer, Long> statusMap = resultList.stream()
+                .collect(Collectors.toMap(
+                        map -> (Integer) map.get("statusCode"),
+                        map -> ((Number) map.get("count")).longValue()
+                ));
 
         // 补充0的状态
         for (OrderStatusEnum statusEnum : OrderStatusEnum.values()) {
@@ -940,14 +1014,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Map<Integer, Long> getTypeDistribution() {
-        log.info("获取订单类型分布统计");
+        log.debug("获取订单类型分布统计");
 
-        List<Order> orders = orderMapper.selectList(
-                Wrappers.lambdaQuery(Order.class).select(Order::getOrderType)
-        );
-
-        Map<Integer, Long> typeMap = orders.stream()
-                .collect(Collectors.groupingBy(Order::getOrderType, Collectors.counting()));
+        // 使用数据库聚合查询（优化后）
+        List<Map<String, Object>> resultList = orderMapper.countByType();
+        Map<Integer, Long> typeMap = resultList.stream()
+                .collect(Collectors.toMap(
+                        map -> (Integer) map.get("typeCode"),
+                        map -> ((Number) map.get("count")).longValue()
+                ));
 
         // 补充0的类型
         for (OrderTypeEnum typeEnum : OrderTypeEnum.values()) {
@@ -1172,7 +1247,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         .eq(Order::getOrderStatus, OrderStatusEnum.PENDING.getCode())
                         .lt(Order::getExpireTime, LocalDateTime.now())
                         .orderByAsc(Order::getExpireTime)
-                        .last("LIMIT 100")
+                        .last("LIMIT " + BusinessConst.Limit.ABNORMAL_ORDER_LIMIT)
         );
 
         return abnormalOrders.stream()
@@ -1181,44 +1256,60 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 应用快捷筛选条件
+     * 应用快捷筛选条件（优化后使用常量）
      */
     private void applyQuickFilter(LambdaQueryWrapper<Order> wrapper, String quickFilter) {
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime tomorrow = today.plusDays(1);
+        LocalDateTime[] todayRange = getTodayDateRange();
 
         switch (quickFilter) {
-            case "pending":
+            case BusinessConst.QuickFilter.PENDING:
                 // 待支付订单
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.PENDING.getCode());
                 break;
-            case "paid":
+            case BusinessConst.QuickFilter.PAID:
                 // 已支付订单（未完成的）
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.PAID.getCode());
                 break;
-            case "cancelled":
+            case BusinessConst.QuickFilter.CANCELLED:
                 // 已取消订单
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.CANCELLED.getCode());
                 break;
-            case "refunded":
+            case BusinessConst.QuickFilter.REFUNDED:
                 // 已退款订单
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.REFUNDED.getCode());
                 break;
-            case "completed":
+            case BusinessConst.QuickFilter.COMPLETED:
                 // 已完成订单
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.COMPLETED.getCode());
                 break;
-            case "abnormal":
+            case BusinessConst.QuickFilter.ABNORMAL:
                 // 异常订单（超时未支付）
                 wrapper.eq(Order::getOrderStatus, OrderStatusEnum.PENDING.getCode())
                         .lt(Order::getExpireTime, LocalDateTime.now());
                 break;
-            case "today":
+            case BusinessConst.QuickFilter.TODAY:
                 // 今日订单
-                wrapper.between(Order::getCreateTime, today, tomorrow);
+                wrapper.between(Order::getCreateTime, todayRange[0], todayRange[1]);
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 获取今日时间范围（通用方法 - 问题12）
+     * @return [开始时间, 结束时间]
+     */
+    private LocalDateTime[] getTodayDateRange() {
+        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime tomorrow = today.plusDays(1);
+        return new LocalDateTime[]{today, tomorrow};
+    }
+
+    /**
+     * 获取本月开始时间（通用方法 - 问题12）
+     */
+    private LocalDateTime getMonthStart() {
+        return LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 }

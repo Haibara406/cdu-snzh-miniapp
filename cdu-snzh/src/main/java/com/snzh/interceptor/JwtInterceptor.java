@@ -1,5 +1,6 @@
 package com.snzh.interceptor;
 
+import com.snzh.constants.BusinessConst;
 import com.snzh.constants.ErrorConst;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
@@ -30,7 +31,6 @@ import java.io.IOException;
 public class JwtInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
-    private final AppUserMapper userMapper;
     private final RedisCache redisCache;
 
     @Override
@@ -64,7 +64,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             }
 
             // 根据用户类型选择不同的Redis Key
-            RedisKeyManage redisKey = "ADMIN".equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
+            RedisKeyManage redisKey = BusinessConst.UserType.ADMIN.equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
             String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
             if(refreshToken == null){
                 writeUnauthorized(response, ErrorConst.USER_NOT_EXIST_OR_BANNED);
@@ -91,7 +91,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             roleType = (String) e.getClaims().get("roleType");
             
             // 根据用户类型选择不同的Redis Key
-            RedisKeyManage redisKey = "ADMIN".equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
+            RedisKeyManage redisKey = BusinessConst.UserType.ADMIN.equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
             String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
             if (refreshToken == null) {
                 writeUnauthorized(response, ErrorConst.TOKEN_EXPIRED);
@@ -99,10 +99,11 @@ public class JwtInterceptor implements HandlerInterceptor {
             }
 
             try {
-                Claims refreshClaims = jwtUtil.parseToken(refreshToken);
+                // 验证RefreshToken有效性
+                jwtUtil.parseToken(refreshToken);
                 // 根据用户类型生成新的 Access Token
                 String newAccessToken;
-                if ("ADMIN".equals(userType)) {
+                if (BusinessConst.UserType.ADMIN.equals(userType)) {
                     newAccessToken = jwtUtil.generateAdminAccessToken(userId, username, status, roleType);
                 } else {
                     newAccessToken = jwtUtil.generateAccessToken(userId, status);
@@ -138,8 +139,9 @@ public class JwtInterceptor implements HandlerInterceptor {
     }
 
     // 工具方法：统一返回 401
-    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException, IOException {
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(message);
     }
 }
