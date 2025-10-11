@@ -205,4 +205,10 @@ public class ErrorConst {
 
     /** 不能禁用自己的账号 */
     public static final String CANNOT_DISABLE_SELF = "不能禁用自己的账号";
+
+    /** 登录失败次数过多 */
+    public static final String TOO_MANY_LOGIN_ATTEMPTS = "登录失败次数过多，账号已被临时锁定%d分钟";
+
+    /** 账号已被临时锁定 */
+    public static final String ACCOUNT_TEMP_LOCKED = "账号已被临时锁定，请%d分钟后再试";
 }

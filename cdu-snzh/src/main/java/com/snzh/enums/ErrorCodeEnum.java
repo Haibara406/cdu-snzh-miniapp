@@ -32,6 +32,8 @@ public enum ErrorCodeEnum {
     CANNOT_DISABLE_SUPER_ADMIN(2154, "不能禁用超级管理员"),
     CANNOT_DELETE_SELF(2155, "不能删除自己的账号"),
     CANNOT_DISABLE_SELF(2156, "不能禁用自己的账号"),
+    TOO_MANY_LOGIN_ATTEMPTS(2157, "登录失败次数过多"),
+    ACCOUNT_TEMP_LOCKED(2158, "账号已被临时锁定"),
 
     // ==================== 基础设施相关 2200-2299 ====================
     FACILITY_NOT_FOUND(2200, "基础设施不存在"),

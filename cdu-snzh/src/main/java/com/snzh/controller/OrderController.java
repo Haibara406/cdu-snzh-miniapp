@@ -225,6 +225,7 @@ public class OrderController {
         return ResponseResult.success(quickFilter);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/abnormal-list")
     @Operation(summary = "【管理端】异常订单列表", description = "获取异常订单列表（超时未支付）")
     public ResponseResult<List<OrderListVO>> getAbnormalOrders() {

@@ -21,6 +21,7 @@ public enum RedisKeyManage {
 
     USER_LOGIN("user:login:%s","用户id" ,"value为refreshToken"),
     ADMIN_LOGIN("admin:login:%s","管理员id" ,"value为refreshToken"),
+    ADMIN_LOGIN_FAIL("admin:login:fail:%s","管理员用户名" ,"value为登录失败次数Integer"),
     FACILITY_TYPE_SINGLE("facility:type:%s", "基础设施类型id", "value为FacilityType类型"),
     FACILITY_TYPE_ALL("facility:type:all", "", "value为List<FacilityTypeVO>类型"),
     FACILITY_FOR_TYPE("facility:%s", "基础设施类型id", "value为List<FacilityVO>类型"),

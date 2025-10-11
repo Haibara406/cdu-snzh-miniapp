@@ -12,6 +12,7 @@ import com.snzh.enums.StatusEnum;
 import com.snzh.exceptions.AccountLockedException;
 import com.snzh.exceptions.AccountNotFoundException;
 import com.snzh.exceptions.AdminLoginException;
+import com.snzh.exceptions.TooManyLoginAttemptsException;
 import com.snzh.mapper.AdminUserMapper;
 import com.snzh.redis.RedisCache;
 import com.snzh.redis.RedisKeyBuild;
@@ -43,9 +44,29 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
 
+    /** 最大登录失败次数 */
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
+    
+    /** 账号锁定时间（分钟） */
+    private static final int LOCK_TIME_MINUTES = 30;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AdminLoginVO login(AdminLoginDTO loginDTO, HttpServletRequest request) {
+        String ipAddr = IpUtils.getIpAddr(request);
+        RedisKeyBuild loginFailKey = RedisKeyBuild.createKey(RedisKeyManage.ADMIN_LOGIN_FAIL, loginDTO.getUsername());
+
+        // 0. 检查登录失败次数
+        Integer failCount = redisCache.get(loginFailKey, Integer.class);
+        if (failCount != null && failCount >= MAX_LOGIN_ATTEMPTS) {
+            Long ttl = redisCache.getExpire(loginFailKey);
+            long remainMinutes = ttl != null ? (ttl / 60) : LOCK_TIME_MINUTES;
+            log.warn("管理员登录失败次数过多：username={}, ip={}, failCount={}", loginDTO.getUsername(), ipAddr, failCount);
+            throw new TooManyLoginAttemptsException(
+                String.format(ErrorConst.ACCOUNT_TEMP_LOCKED, remainMinutes)
+            );
+        }
+
         // 1. 查询管理员账号
         AdminUser adminUser = adminUserMapper.selectOne(
                 Wrappers.lambdaQuery(AdminUser.class)
@@ -53,11 +74,17 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
         );
 
         if (adminUser == null) {
+            // 记录登录失败
+            recordLoginFailure(loginFailKey);
+            log.warn("管理员登录失败-账号不存在：username={}, ip={}", loginDTO.getUsername(), ipAddr);
             throw new AccountNotFoundException(ErrorConst.ADMIN_LOGIN_ERROR);
         }
 
         // 2. 验证密码
         if (!PasswordUtils.matches(loginDTO.getPassword(), adminUser.getPassword())) {
+            // 记录登录失败
+            recordLoginFailure(loginFailKey);
+            log.warn("管理员登录失败-密码错误：username={}, ip={}", loginDTO.getUsername(), ipAddr);
             throw new AdminLoginException(ErrorConst.ADMIN_LOGIN_ERROR);
         }
 
@@ -66,13 +93,15 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
             throw new AccountLockedException(ErrorConst.ADMIN_ACCOUNT_DISABLED);
         }
 
-        // 4. 更新登录信息
-        String ipAddr = IpUtils.getIpAddr(request);
+        // 4. 登录成功，清除失败记录
+        redisCache.del(loginFailKey);
+
+        // 5. 更新登录信息
         adminUser.setLastLoginTime(LocalDateTime.now());
         adminUser.setLastLoginIp(ipAddr);
         adminUserMapper.updateById(adminUser);
 
-        // 5. 生成Token
+        // 6. 生成Token
         String accessToken = jwtUtil.generateAdminAccessToken(
                 String.valueOf(adminUser.getId()),
                 adminUser.getUsername(),
@@ -81,7 +110,7 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
         );
         String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(adminUser.getId()));
 
-        // 6. 存储RefreshToken到Redis
+        // 7. 存储RefreshToken到Redis
         redisCache.set(
                 RedisKeyBuild.createKey(RedisKeyManage.ADMIN_LOGIN, adminUser.getId()),
                 refreshToken,
@@ -98,6 +127,22 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
                 .username(adminUser.getUsername())
                 .realName(adminUser.getRealName())
                 .build();
+    }
+
+    /**
+     * 记录登录失败次数
+     */
+    private void recordLoginFailure(RedisKeyBuild loginFailKey) {
+        Integer failCount = redisCache.get(loginFailKey, Integer.class);
+        if (failCount == null) {
+            failCount = 0;
+        }
+        failCount++;
+        
+        // 设置过期时间（锁定时间）
+        redisCache.set(loginFailKey, failCount, LOCK_TIME_MINUTES, TimeUnit.MINUTES);
+        
+        log.debug("记录登录失败：key={}, failCount={}", loginFailKey.getRealKey(), failCount);
     }
 
     @Override
