@@ -369,9 +369,13 @@ public class AiToolService {
                     }
                 }
                 
-                // 基础设施推荐 - 简化格式
+                // 基础设施推荐 - 重要！要在显眼位置
                 if (segment.getFacilityRecommendation() != null) {
-                    sb.append(formatFacilityRecommendationSimple(segment.getFacilityRecommendation()));
+                    String facilityInfo = formatFacilityRecommendationSimple(segment.getFacilityRecommendation());
+                    if (!facilityInfo.trim().isEmpty()) {
+                        sb.append("\n【配套设施】\n");
+                        sb.append(facilityInfo);
+                    }
                 }
             }
         }
@@ -387,7 +391,13 @@ public class AiToolService {
             sb.append(recommendation.getSummary()).append("\n");
         }
         
-        sb.append("\n【AI请注意】以上是基础推荐数据，请你基于用户的具体情况（年龄、兴趣、出行方式等）进行个性化解读和建议！");
+        sb.append("\n【AI请注意】");
+        sb.append("\n1. 以上是基础推荐数据，请你基于用户的具体情况（年龄、兴趣、出行方式等）进行个性化解读和建议");
+        sb.append("\n2. 【配套设施】中的餐厅、住宿、停车场、充电桩等都已按距离排序，最近的排在最前面");
+        sb.append("\n3. 请务必向用户介绍这些配套设施，并说明距离信息（如：'距离景点约0.8公里'）");
+        sb.append("\n4. 强调这些推荐是基于距离优化的，让用户知道这些是离景点最近、最方便的选择");
+        sb.append("\n5. 如果用户是自驾，特别要提及停车场（如有电动车，也要提充电桩）");
+        sb.append("\n6. 如果是两日游，一定要推荐住宿并说明距离");
         
         return sb.toString();
     }
@@ -398,56 +408,69 @@ public class AiToolService {
     private String formatFacilityRecommendationSimple(RouteRecommendService.FacilityRecommendation facility) {
         StringBuilder sb = new StringBuilder();
         
-        // 餐厅推荐（优先显示）
+        // 餐厅推荐（优先显示，必须显示）
         if (facility.getRestaurants() != null && !facility.getRestaurants().isEmpty()) {
-            sb.append("🍽️ 推荐餐厅：\n");
+            sb.append("🍽️ 餐厅推荐（按距离排序，离景点最近）：\n");
             int count = 1;
             for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
                 sb.append("  ").append(count++).append(". ").append(restaurant.getName());
-                if (restaurant.getDistance() != null) {
-                    sb.append("（").append(restaurant.getDistance()).append("）");
+                if (restaurant.getDistance() != null && !restaurant.getDistance().isEmpty()) {
+                    sb.append(" - 距离").append(restaurant.getDistance());
+                }
+                if (restaurant.getReason() != null && !restaurant.getReason().isEmpty()) {
+                    sb.append(" | ").append(restaurant.getReason());
                 }
                 sb.append("\n");
             }
-        } else if (facility.getTips() != null && facility.getTips().contains("餐厅")) {
-            // 即使没有具体餐厅数据，也显示提示信息
-            sb.append("🍽️ 用餐建议：景区内有多家餐厅可供选择\n");
+            sb.append("  💡 人均消费50-80元\n");
+        } else {
+            // 没有具体餐厅数据时，也要明确提示
+            sb.append("🍽️ 用餐建议：景区内有多家餐厅可供选择，建议提前规划用餐时间（人均50-80元）\n");
         }
         
-        // 住宿推荐（显示距离）
+        // 住宿推荐（显示距离，强调"离景点近"）
         if (facility.getAccommodations() != null && !facility.getAccommodations().isEmpty()) {
-            sb.append("🏨 推荐住宿：\n");
+            sb.append("🏨 住宿推荐（按距离排序，离景点最近）：\n");
             int count = 1;
             for (RouteRecommendService.FacilityItem accommodation : facility.getAccommodations()) {
                 sb.append("  ").append(count++).append(". ").append(accommodation.getName());
-                if (accommodation.getDistance() != null) {
-                    sb.append("（").append(accommodation.getDistance()).append("）");
+                if (accommodation.getDistance() != null && !accommodation.getDistance().isEmpty()) {
+                    sb.append(" - 距离").append(accommodation.getDistance());
+                } else {
+                    sb.append(" - 景区内住宿");
+                }
+                if (accommodation.getAddress() != null && !accommodation.getAddress().isEmpty()) {
+                    sb.append(" | 地址：").append(accommodation.getAddress());
                 }
                 sb.append("\n");
             }
         }
         
-        // 停车场推荐（显示距离）
+        // 停车场推荐（显示距离，强调"最近"）
         if (facility.getParkings() != null && !facility.getParkings().isEmpty()) {
-            sb.append("🅿️ 推荐停车场：\n");
+            sb.append("🅿️ 停车场推荐（按距离排序，离景点最近）：\n");
             int count = 1;
             for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
                 sb.append("  ").append(count++).append(". ").append(parking.getName());
-                if (parking.getDistance() != null) {
-                    sb.append("（").append(parking.getDistance()).append("）");
+                if (parking.getDistance() != null && !parking.getDistance().isEmpty()) {
+                    sb.append(" - 距离").append(parking.getDistance());
+                } else {
+                    sb.append(" - 景区内停车场");
                 }
                 sb.append("\n");
             }
         }
         
-        // 充电桩推荐（显示距离）
+        // 充电桩推荐（显示距离，强调"最近"）
         if (facility.getChargingStations() != null && !facility.getChargingStations().isEmpty()) {
-            sb.append("🔌 推荐充电桩：\n");
+            sb.append("🔌 充电桩推荐（按距离排序，离景点最近）：\n");
             int count = 1;
             for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
                 sb.append("  ").append(count++).append(". ").append(charging.getName());
-                if (charging.getDistance() != null) {
-                    sb.append("（").append(charging.getDistance()).append("）");
+                if (charging.getDistance() != null && !charging.getDistance().isEmpty()) {
+                    sb.append(" - 距离").append(charging.getDistance());
+                } else {
+                    sb.append(" - 景区内充电桩");
                 }
                 sb.append("\n");
             }
