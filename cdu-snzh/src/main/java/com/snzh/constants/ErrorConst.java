@@ -175,4 +175,16 @@ public class ErrorConst {
 
     /** 门票已下架 */
     public static final String TICKET_DISABLED = "门票已下架，无法购买";
+
+    /** 管理员账号或密码错误 */
+    public static final String ADMIN_LOGIN_ERROR = "账号或密码错误";
+
+    /** 管理员账号已被禁用 */
+    public static final String ADMIN_ACCOUNT_DISABLED = "账号已被禁用";
+
+    /** 管理员不存在 */
+    public static final String ADMIN_NOT_FOUND = "管理员不存在";
+
+    /** 需要管理员权限 */
+    public static final String REQUIRE_ADMIN_PERMISSION = "需要管理员权限";
 }

@@ -44,11 +44,16 @@ public class JwtInterceptor implements HandlerInterceptor {
         token = token.substring(7);
         String userId;
         String status = "1";
+        String userType;
+        String username;
 
         try {
             userId = jwtUtil.getUserId(token);
             status = jwtUtil.getStatus(token);
-            if(userId == null || status == null){
+            userType = jwtUtil.getUserType(token);
+            username = jwtUtil.getUsername(token);
+            
+            if(userId == null || status == null || userType == null){
                 writeUnauthorized(response, ErrorConst.INVALID_TOKEN);
                 return false;
             }
@@ -56,8 +61,9 @@ public class JwtInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            // 读取用户状态缓存
-            String refreshToken = redisCache.get(RedisKeyBuild.createKey(RedisKeyManage.USER_LOGIN, userId), String.class);
+            // 根据用户类型选择不同的Redis Key
+            RedisKeyManage redisKey = "ADMIN".equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
+            String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
             if(refreshToken == null){
                 writeUnauthorized(response, ErrorConst.USER_NOT_EXIST_OR_BANNED);
                 return false;
@@ -65,12 +71,21 @@ public class JwtInterceptor implements HandlerInterceptor {
 
             // 存入 ThreadLocal
             UserContext.set("userId", userId);
+            UserContext.set("userType", userType);
+            if (username != null) {
+                UserContext.set("username", username);
+            }
             return true;
 
         } catch (ExpiredJwtException e) {
             // Access Token 过期，尝试使用 Redis 中的 Refresh Token 续签
             userId = e.getClaims().getSubject();
-            String refreshToken = redisCache.get(RedisKeyBuild.createKey(RedisKeyManage.USER_LOGIN, userId), String.class);
+            userType = (String) e.getClaims().get("userType");
+            username = (String) e.getClaims().get("username");
+            
+            // 根据用户类型选择不同的Redis Key
+            RedisKeyManage redisKey = "ADMIN".equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
+            String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
             if (refreshToken == null) {
                 writeUnauthorized(response, ErrorConst.TOKEN_EXPIRED);
                 return false;
@@ -78,12 +93,21 @@ public class JwtInterceptor implements HandlerInterceptor {
 
             try {
                 Claims refreshClaims = jwtUtil.parseToken(refreshToken);
-                // 生成新的 Access Token
-                String newAccessToken = jwtUtil.generateAccessToken(userId, status);
+                // 根据用户类型生成新的 Access Token
+                String newAccessToken;
+                if ("ADMIN".equals(userType)) {
+                    newAccessToken = jwtUtil.generateAdminAccessToken(userId, username, status);
+                } else {
+                    newAccessToken = jwtUtil.generateAccessToken(userId, status);
+                }
                 response.setHeader("New-Access-Token", newAccessToken);
 
                 // 存入 ThreadLocal
                 UserContext.set("userId", userId);
+                UserContext.set("userType", userType);
+                if (username != null) {
+                    UserContext.set("username", username);
+                }
                 return true;
 
             } catch (Exception ex) {

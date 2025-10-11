@@ -21,6 +21,8 @@ public enum ErrorCodeEnum {
     ACCOUNT_LOCKED(2101, "账号已被锁定"),
     LOGIN_FAILED(2102, "登录失败"),
     GET_PHONE_NUMBER_FAILED(2103, "获取手机号失败"),
+    UNAUTHORIZED(2104, "无权限访问"),
+    ADMIN_LOGIN_FAILED(2105, "管理员登录失败"),
 
     // ==================== 基础设施相关 2200-2299 ====================
     FACILITY_NOT_FOUND(2200, "基础设施不存在"),

@@ -36,16 +36,36 @@ public class JwtUtil {
     }
 
     /**
-     * 生成 Access Token
+     * 生成 Access Token（普通用户）
      */
     public String generateAccessToken(String userId, String status) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("status", status);
+        claims.put("userType", "USER");
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userId)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpire()))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * 生成 Access Token（管理员）
+     */
+    public String generateAdminAccessToken(String adminId, String username, String status) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", adminId);
+        claims.put("username", username);
+        claims.put("status", status);
+        claims.put("userType", "ADMIN");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(adminId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpire()))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -99,6 +119,14 @@ public class JwtUtil {
 
     public String getStatus(String token) {
         return parseToken(token).get("status", String.class);
+    }
+
+    public String getUserType(String token) {
+        return parseToken(token).get("userType", String.class);
+    }
+
+    public String getUsername(String token) {
+        return parseToken(token).get("username", String.class);
     }
 }
 

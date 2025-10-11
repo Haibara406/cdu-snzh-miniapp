@@ -20,6 +20,7 @@ public enum RedisKeyManage {
     Key2("key:%s","键值占位测试","value为TestCacheDto类型"),
 
     USER_LOGIN("user:login:%s","用户id" ,"value为refreshToken"),
+    ADMIN_LOGIN("admin:login:%s","管理员id" ,"value为refreshToken"),
     FACILITY_TYPE_SINGLE("facility:type:%s", "基础设施类型id", "value为FacilityType类型"),
     FACILITY_TYPE_ALL("facility:type:all", "", "value为List<FacilityTypeVO>类型"),
     FACILITY_FOR_TYPE("facility:%s", "基础设施类型id", "value为List<FacilityVO>类型"),

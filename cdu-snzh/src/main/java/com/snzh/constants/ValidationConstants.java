@@ -137,4 +137,9 @@ public class ValidationConstants {
 
     public static final String CANCEL_REASON_TOO_LONG = "取消原因不能超过255个字符";
 
+    /** 管理员相关校验 */
+    public static final String ADMIN_USERNAME_NOT_NULL = "用户名不能为空";
+
+    public static final String ADMIN_PASSWORD_NOT_NULL = "密码不能为空";
+
 }

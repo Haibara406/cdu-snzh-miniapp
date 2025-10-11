@@ -55,6 +55,12 @@
 <!--            <scope>test</scope>-->
 <!--        </dependency>-->
 
+        <!-- spring-security-crypto (密码加密) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <!-- security-test -->
         <dependency>
             <groupId>org.springframework.security</groupId>
