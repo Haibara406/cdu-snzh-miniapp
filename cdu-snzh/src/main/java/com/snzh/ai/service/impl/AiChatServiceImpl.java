@@ -520,7 +520,7 @@ public class AiChatServiceImpl implements IAiChatService {
 
             // 5. 先检查是否需要工具调用（同步处理）
             // 注意：通义千问的流式API可能不直接支持工具调用，因此我们先同步检查
-            int maxToolIterations = 5;
+            int maxToolIterations = 10;
             
             for (int i = 0; i < maxToolIterations; i++) {
                 // 最后一次迭代时不传工具列表，强制AI生成文本回复
@@ -770,6 +770,13 @@ public class AiChatServiceImpl implements IAiChatService {
                 ✅ 天气查询、设施位置查询
                 ✅ 退款政策、注意事项、常见问题解答
                 ✅ 引导用户购票（收集信息、确认订单）
+                
+                【工具选择策略】
+                ⚠️ 重要：合理选择工具，避免浪费资源
+                1. 路线规划场景：直接使用recommendRoute工具（包含景点、设施、天气等完整信息）
+                2. 景点概览：使用listAllScenics工具（返回所有景点列表）
+                3. 具体景点详情：只有用户明确询问某个景点时才用getScenicDetail
+                ❌ 禁止：不要逐个查询多个景点的详情，这会导致响应缓慢
                 
                 【你不能做什么】
                 ❌ 回答本景区外的旅游问题
