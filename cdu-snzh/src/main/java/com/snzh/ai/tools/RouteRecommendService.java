@@ -77,6 +77,7 @@ public class RouteRecommendService {
         private boolean hiking; // 是否徒步
         private boolean photography; // 是否摄影
         private boolean leisure; // 是否休闲游
+        private boolean bambooCulture; // 是否喜欢竹文化（可扩展）
         private LocalDate visitDate; // 游玩日期
         private String weatherCondition; // 天气状况
         private int temperature; // 温度
@@ -308,7 +309,7 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(false);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"博物馆", "文化", "室内"});
+                info.setTags(new String[]{"博物馆", "竹文化", "室内", "雨天好选择"});
                 break;
             case "望龙坪":
                 info.setDifficulty(2);
@@ -389,6 +390,15 @@ public class RouteRecommendService {
                     // 如果是休闲游，优先选择简单的景点
                     if (preference.isLeisure()) {
                         scenic.setPriority(scenic.getPriority() + (3 - scenic.getDifficulty()));
+                    }
+                    // 如果喜欢竹文化，优先推荐相关景点
+                    if (preference.isBambooCulture() && scenic.getTags() != null) {
+                        for (String tag : scenic.getTags()) {
+                            if (tag.contains("竹") || tag.contains("博物馆") || tag.contains("文化")) {
+                                scenic.setPriority(scenic.getPriority() + 3);
+                                break;
+                            }
+                        }
                     }
                     
                     return true;
@@ -637,7 +647,62 @@ public class RouteRecommendService {
     }
     
     /**
-     * 生成基础设施推荐
+     * 计算设施到景点群的平均距离（用于排序）
+     */
+    private double calculateAverageDistance(FacilityVO facility, List<ScenicInfo> scenics) {
+        if (facility.getLongitude() == null || facility.getLatitude() == null) {
+            return Double.MAX_VALUE;
+        }
+        
+        try {
+            double facilityLon = Double.parseDouble(facility.getLongitude());
+            double facilityLat = Double.parseDouble(facility.getLatitude());
+            
+            double totalDistance = 0;
+            int validCount = 0;
+            
+            for (ScenicInfo scenic : scenics) {
+                if (scenic.getLongitude() != null && scenic.getLatitude() != null) {
+                    double scenicLon = Double.parseDouble(scenic.getLongitude());
+                    double scenicLat = Double.parseDouble(scenic.getLatitude());
+                    
+                    // 使用Haversine公式计算距离
+                    double R = 6371; // 地球半径（千米）
+                    double dLat = Math.toRadians(scenicLat - facilityLat);
+                    double dLon = Math.toRadians(scenicLon - facilityLon);
+                    double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                              Math.cos(Math.toRadians(facilityLat)) * Math.cos(Math.toRadians(scenicLat)) *
+                              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    double distance = R * c;
+                    
+                    totalDistance += distance;
+                    validCount++;
+                }
+            }
+            
+            return validCount > 0 ? totalDistance / validCount : Double.MAX_VALUE;
+        } catch (Exception e) {
+            log.debug("计算设施距离失败：{}", e.getMessage());
+            return Double.MAX_VALUE;
+        }
+    }
+    
+    /**
+     * 按距离排序设施列表
+     */
+    private List<FacilityVO> sortFacilitiesByDistance(List<FacilityVO> facilities, List<ScenicInfo> scenics) {
+        return facilities.stream()
+                .sorted((f1, f2) -> {
+                    double dist1 = calculateAverageDistance(f1, scenics);
+                    double dist2 = calculateAverageDistance(f2, scenics);
+                    return Double.compare(dist1, dist2);
+                })
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * 生成基础设施推荐（基于距离优化）
      */
     private FacilityRecommendation generateFacilityRecommendation(List<ScenicInfo> scenics, boolean needAccommodation, UserPreference preference) {
         if (scenics == null || scenics.isEmpty()) {
@@ -648,19 +713,23 @@ public class RouteRecommendService {
             FacilityRecommendation recommendation = new FacilityRecommendation();
             boolean hasAnyFacility = false;
             
-            // 获取卫生间（如果查询失败则跳过）
+            // 获取卫生间（按距离排序）
             try {
                 List<FacilityVO> toilets = facilityService.getFacilitiesByType(FacilityTypeId.TOILET);
                 if (toilets != null && !toilets.isEmpty()) {
-                    List<FacilityItem> toiletItems = toilets.stream()
+                    // 按距离排序，取最近的3个
+                    List<FacilityItem> toiletItems = sortFacilitiesByDistance(toilets, scenics).stream()
                         .limit(3)
                         .map(this::convertToFacilityItem)
                         .collect(Collectors.toList());
                     recommendation.setToilets(toiletItems);
                     hasAnyFacility = true;
+                } else {
+                    log.trace("卫生间列表为空");
                 }
             } catch (Exception e) {
-                log.debug("获取卫生间信息失败（可能暂无数据）：{}", e.getMessage());
+                log.trace("卫生间数据暂未配置：{}", e.getMessage());
+                // 静默处理，不影响主流程
             }
             
             // 推荐服务设施
@@ -674,7 +743,7 @@ public class RouteRecommendService {
                     hasAnyFacility = true;
                 }
             } catch (Exception e) {
-                log.debug("获取游客中心失败（可能暂无数据）：{}", e.getMessage());
+                log.trace("游客中心数据暂未配置：{}", e.getMessage());
             }
             
             // 医务室（有老人或小孩时推荐）
@@ -688,7 +757,7 @@ public class RouteRecommendService {
                         hasAnyFacility = true;
                     }
                 } catch (Exception e) {
-                    log.debug("获取医务室失败（可能暂无数据）：{}", e.getMessage());
+                    log.trace("医务室数据暂未配置：{}", e.getMessage());
                 }
             }
             
@@ -696,16 +765,22 @@ public class RouteRecommendService {
                 recommendation.setServices(serviceItems);
             }
             
-            // 推荐停车场（首次时段推荐，自驾游客）
+            // 推荐停车场（按距离排序，优先推荐离景点近的）
             if (preference.isSelfDriving()) {
                 try {
                     List<FacilityVO> parkings = facilityService.getFacilitiesByType(FacilityTypeId.PARKING);
                     if (parkings != null && !parkings.isEmpty()) {
-                        List<FacilityItem> parkingItems = parkings.stream()
-                            .limit(5)
+                        // 按距离排序，取最近的3-5个
+                        List<FacilityItem> parkingItems = sortFacilitiesByDistance(parkings, scenics).stream()
+                            .limit(3)
                             .map(parking -> {
                                 FacilityItem item = convertToFacilityItem(parking);
-                                item.setReason("自驾游客停车");
+                                item.setReason("距离景点近");
+                                // 计算距离并添加到描述中
+                                double distance = calculateAverageDistance(parking, scenics);
+                                if (distance < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("约%.1f公里", distance));
+                                }
                                 return item;
                             })
                             .collect(Collectors.toList());
@@ -713,20 +788,26 @@ public class RouteRecommendService {
                         hasAnyFacility = true;
                     }
                 } catch (Exception e) {
-                    log.debug("获取停车场信息失败（可能暂无数据）：{}", e.getMessage());
+                    log.trace("停车场数据暂未配置：{}", e.getMessage());
                 }
             }
             
-            // 推荐充电桩（电动车用户）
+            // 推荐充电桩（按距离排序）
             if (preference.isHasElectricVehicle()) {
                 try {
                     List<FacilityVO> chargingStations = facilityService.getFacilitiesByType(FacilityTypeId.CHARGING);
                     if (chargingStations != null && !chargingStations.isEmpty()) {
-                        List<FacilityItem> chargingItems = chargingStations.stream()
-                            .limit(5)
+                        // 按距离排序，取最近的3个
+                        List<FacilityItem> chargingItems = sortFacilitiesByDistance(chargingStations, scenics).stream()
+                            .limit(3)
                             .map(charging -> {
                                 FacilityItem item = convertToFacilityItem(charging);
-                                item.setReason("电动车充电");
+                                item.setReason("距离景点近");
+                                // 计算距离并添加到描述中
+                                double distance = calculateAverageDistance(charging, scenics);
+                                if (distance < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("约%.1f公里", distance));
+                                }
                                 return item;
                             })
                             .collect(Collectors.toList());
@@ -734,20 +815,26 @@ public class RouteRecommendService {
                         hasAnyFacility = true;
                     }
                 } catch (Exception e) {
-                    log.debug("获取充电桩信息失败（可能暂无数据）：{}", e.getMessage());
+                    log.trace("充电桩数据暂未配置：{}", e.getMessage());
                 }
             }
             
-            // 如果需要住宿（两日游）
+            // 推荐住宿（按距离排序，优先推荐离景点近的）
             if (needAccommodation) {
                 try {
                     List<FacilityVO> accommodations = facilityService.getFacilitiesByType(FacilityTypeId.ACCOMMODATION);
                     if (accommodations != null && !accommodations.isEmpty()) {
-                        List<FacilityItem> accommodationItems = accommodations.stream()
-                            .limit(5)
+                        // 按距离排序，取最近的3-5个
+                        List<FacilityItem> accommodationItems = sortFacilitiesByDistance(accommodations, scenics).stream()
+                            .limit(3)
                             .map(facility -> {
                                 FacilityItem item = convertToFacilityItem(facility);
-                                item.setReason("景区内住宿");
+                                item.setReason("距离景点近");
+                                // 计算距离并添加到描述中
+                                double distance = calculateAverageDistance(facility, scenics);
+                                if (distance < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("约%.1f公里", distance));
+                                }
                                 return item;
                             })
                             .collect(Collectors.toList());
@@ -755,13 +842,13 @@ public class RouteRecommendService {
                         hasAnyFacility = true;
                     }
                 } catch (Exception e) {
-                    log.debug("获取住宿信息失败（可能暂无数据）：{}", e.getMessage());
+                    log.trace("住宿数据暂未配置：{}", e.getMessage());
                 }
             }
             
             // 如果没有任何设施数据，返回null
             if (!hasAnyFacility) {
-                log.debug("当前时段暂无可推荐的基础设施");
+                log.trace("当前时段暂无可推荐的基础设施");
                 return null;
             }
             
@@ -771,19 +858,27 @@ public class RouteRecommendService {
                 tips.append("💡 景区内设有卫生间，位置见推荐列表");
             }
             if (recommendation.getParkings() != null && !recommendation.getParkings().isEmpty()) {
-                if (tips.length() > 0) tips.append("\n");
+                if (tips.length() > 0) {
+                    tips.append("\n");
+                }
                 tips.append("💡 景区设有多个停车场，建议早到以获得更好的停车位");
             }
             if (recommendation.getChargingStations() != null && !recommendation.getChargingStations().isEmpty()) {
-                if (tips.length() > 0) tips.append("\n");
+                if (tips.length() > 0) {
+                    tips.append("\n");
+                }
                 tips.append("💡 景区内设有充电桩，建议提前规划充电时间");
             }
             if (recommendation.getServices() != null && !recommendation.getServices().isEmpty()) {
-                if (tips.length() > 0) tips.append("\n");
+                if (tips.length() > 0) {
+                    tips.append("\n");
+                }
                 tips.append("💡 如需帮助，可前往游客中心或服务点");
             }
             if (needAccommodation && recommendation.getAccommodations() != null && !recommendation.getAccommodations().isEmpty()) {
-                if (tips.length() > 0) tips.append("\n");
+                if (tips.length() > 0) {
+                    tips.append("\n");
+                }
                 tips.append("💡 建议提前预订住宿，节假日需提前1-2周");
             }
             
@@ -799,21 +894,27 @@ public class RouteRecommendService {
     }
     
     /**
-     * 生成餐厅推荐（午餐专用）
+     * 生成餐厅推荐（按距离排序）
      */
     private FacilityRecommendation generateRestaurantRecommendation(List<ScenicInfo> route) {
         try {
             FacilityRecommendation recommendation = new FacilityRecommendation();
             
-            // 获取餐厅
+            // 获取餐厅（按距离排序）
             try {
                 List<FacilityVO> restaurants = facilityService.getFacilitiesByType(FacilityTypeId.RESTAURANT);
                 if (restaurants != null && !restaurants.isEmpty()) {
-                    List<FacilityItem> restaurantItems = restaurants.stream()
+                    // 按距离排序，取最近的3-5个
+                    List<FacilityItem> restaurantItems = sortFacilitiesByDistance(restaurants, route).stream()
                         .limit(5)
                         .map(restaurant -> {
                             FacilityItem item = convertToFacilityItem(restaurant);
-                            item.setReason("推荐特色：竹笋宴、竹筒饭、腊肉");
+                            item.setReason("特色：竹笋宴、竹筒饭、腊肉");
+                            // 计算距离并添加到描述中
+                            double distance = calculateAverageDistance(restaurant, route);
+                            if (distance < Double.MAX_VALUE) {
+                                item.setDistance(String.format("约%.1f公里", distance));
+                            }
                             return item;
                         })
                         .collect(Collectors.toList());
@@ -821,18 +922,23 @@ public class RouteRecommendService {
                     
                     recommendation.setTips("💡 景区餐厅人均消费50-80元，也可自带食物在休息区用餐");
                     return recommendation;
+                } else {
+                    log.trace("餐厅列表为空");
                 }
             } catch (Exception e) {
-                log.debug("获取餐厅信息失败（可能暂无数据）：{}", e.getMessage());
+                log.trace("餐厅数据暂未配置：{}", e.getMessage());
             }
             
-            // 如果没有餐厅数据，返回基本提示
-            recommendation.setTips("💡 景区内有多家餐厅可供选择，也可自带食物在休息区用餐");
+            // 如果没有餐厅数据，也返回一个带提示的推荐对象（让AI知道有这个信息）
+            recommendation.setTips("💡 景区内有多家餐厅可供选择，人均50-80元，也可自带食物在休息区用餐");
             return recommendation;
             
         } catch (Exception e) {
             log.warn("生成餐厅推荐时发生异常：{}", e.getMessage());
-            return null;
+            // 即使发生异常，也返回基本提示
+            FacilityRecommendation fallback = new FacilityRecommendation();
+            fallback.setTips("💡 景区内设有餐厅，建议提前规划用餐时间");
+            return fallback;
         }
     }
     
@@ -862,21 +968,33 @@ public class RouteRecommendService {
     private String generateReason(ScenicInfo scenic, UserPreference preference) {
         List<String> reasons = new ArrayList<>();
         
+        // 优先根据用户偏好生成理由
         if (preference.isPhotography() && scenic.isSuitableForPhotography()) {
-            reasons.add("绝佳拍照地");
+            reasons.add("摄影取景绝佳");
         }
         if (preference.isHasChildren() && scenic.isSuitableForChildren()) {
-            reasons.add("适合亲子游");
+            reasons.add("亲子友好");
         }
         if (preference.isHasElderly() && scenic.isSuitableForElderly()) {
-            reasons.add("老人友好");
+            reasons.add("轻松不累");
         }
         if (preference.isLeisure() && scenic.getDifficulty() == 1) {
-            reasons.add("轻松休闲");
+            reasons.add("休闲舒适");
+        }
+        if (preference.isHiking() && scenic.getDifficulty() >= 2) {
+            reasons.add("适合运动");
+        }
+        
+        // 添加景点特色标签（最多2个）
+        if (scenic.getTags() != null && scenic.getTags().length > 0) {
+            int tagCount = Math.min(2, scenic.getTags().length);
+            for (int i = 0; i < tagCount && reasons.size() < 3; i++) {
+                reasons.add(scenic.getTags()[i]);
+            }
         }
         
         if (reasons.isEmpty()) {
-            return String.join("、", scenic.getTags());
+            return "景区特色景点";
         }
         
         return String.join("、", reasons);
@@ -885,17 +1003,29 @@ public class RouteRecommendService {
     private String generateScenicTips(ScenicInfo scenic, UserPreference preference) {
         List<String> tips = new ArrayList<>();
         
+        // 根据难度提示
         if (scenic.getDifficulty() >= 2) {
-            tips.add("建议穿舒适鞋子");
+            if (preference.isHasElderly()) {
+                tips.add("有台阶，老人请注意安全");
+            } else {
+                tips.add("建议穿运动鞋");
+            }
         }
         
+        // 天气相关提示
         if (!scenic.isRainyDayFriendly() && preference.getWeatherCondition() != null && 
             preference.getWeatherCondition().contains("雨")) {
-            tips.add("雨天路滑请注意安全");
+            tips.add("雨天路滑注意安全");
         }
         
-        if (scenic.isSuitableForPhotography()) {
-            tips.add("最佳拍照时间：上午10:00-11:00或下午14:00-15:00");
+        // 摄影相关提示
+        if (preference.isPhotography() && scenic.isSuitableForPhotography()) {
+            tips.add("拍照最佳时段：上午10-11点或下午2-3点");
+        }
+        
+        // 儿童相关提示
+        if (preference.isHasChildren() && scenic.getDifficulty() >= 2) {
+            tips.add("请看管好小朋友");
         }
         
         return tips.isEmpty() ? null : String.join("；", tips);
@@ -904,27 +1034,43 @@ public class RouteRecommendService {
     private String generateTips(UserPreference preference, List<ScenicInfo> route) {
         List<String> tips = new ArrayList<>();
         
-        tips.add("💡 建议提前购买门票和观光车票，节省排队时间");
-        tips.add("💡 携带足够的饮用水和适量零食");
+        // 通用建议
+        tips.add("💡 建议提前购买门票和观光车票");
+        tips.add("💡 携带足够饮用水");
         
+        // 天气相关建议
         if (preference.getWeatherCondition() != null) {
             if (preference.getWeatherCondition().contains("雨")) {
-                tips.add("💡 携带雨具，穿防滑鞋");
+                tips.add("💡 雨天请备雨具和防滑鞋");
             } else if (preference.getWeatherCondition().contains("晴")) {
-                tips.add("💡 注意防晒，带好遮阳帽和防晒霜");
+                tips.add("💡 晴天注意防晒");
             }
         }
         
+        // 老人建议
         if (preference.isHasElderly()) {
-            tips.add("💡 老人游览请适当休息，量力而行");
+            tips.add("💡 老人游览请适当休息");
         }
         
+        // 儿童建议
         if (preference.isHasChildren()) {
-            tips.add("💡 看管好孩子，注意安全");
+            tips.add("💡 请看管好小朋友");
         }
         
-        tips.add("💡 景区较大，建议购买观光车票");
-        tips.add("💡 尊重自然，不要破坏竹林");
+        // 自驾建议
+        if (preference.isSelfDriving()) {
+            tips.add("💡 自驾请提前了解停车场位置");
+            if (preference.isHasElectricVehicle()) {
+                tips.add("💡 电动车建议规划充电时间");
+            }
+        }
+        
+        // 摄影建议
+        if (preference.isPhotography()) {
+            tips.add("💡 晨光和傍晚光线最适合拍照");
+        }
+        
+        tips.add("💡 爱护环境，不破坏竹林");
         
         return String.join("\n", tips);
     }

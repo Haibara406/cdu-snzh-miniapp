@@ -231,21 +231,28 @@ public class AiToolService {
      * 综合考虑天气、用户偏好、景点距离等因素
      */
     @Tool("根据用户的游玩时长、游玩场景和天气情况智能推荐最合适的游玩路线和行程安排。" +
-         "参数说明：" +
+         "\n\n【重要提示】此工具返回的是基础推荐数据，你需要基于用户的具体描述进行深度分析和个性化解读，不要机械地复述工具输出！" +
+         "\n\n参数说明：" +
          "- duration: 游玩时长（必填，String类型，例如：'一天'、'半天'、'4小时'、'两天'等）" +
          "- visitDate: 游玩日期（可选，String类型，格式：yyyy-MM-dd，用于查询天气）" +
-         "- hasChildren: 是否有小孩（可选，Boolean类型，默认false）" +
-         "- hasElderly: 是否有老人（可选，Boolean类型，默认false）" +
-         "- hiking: 是否徒步（可选，Boolean类型，默认false）" +
-         "- photography: 是否摄影（可选，Boolean类型，默认false）" +
-         "- leisure: 是否休闲游（可选，Boolean类型，默认false）" +
-         "- selfDriving: 是否自驾游（可选，Boolean类型，默认false，会推荐停车场）" +
-         "- hasElectricVehicle: 是否电动车（可选，Boolean类型，默认false，会推荐充电桩）" +
-         "返回内容包括：天气信息、详细的分时段行程安排、推荐景点、预计游览时间、推荐理由、停车充电设施、餐饮住宿等完整服务。" +
-         "适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线、" +
-         "带老人/小孩出游、摄影爱好者、自驾游等各种场景。" +
-         "智能特性：会根据天气自动调整路线（如雨天推荐室内或有遮蔽的景点），" +
-         "根据人群特点推荐合适的景点（如有老人则避免爬山景点），为自驾游客推荐停车场和充电桩，优化景点顺序减少往返。")
+         "- hasChildren: 是否有小孩（可选，Boolean类型，默认false）- 根据用户话语判断" +
+         "- hasElderly: 是否有老人（可选，Boolean类型，默认false）- 根据用户话语判断" +
+         "- hiking: 是否徒步（可选，Boolean类型，默认false）- 用户提到徒步、登山、运动等" +
+         "- photography: 是否摄影（可选，Boolean类型，默认false）- 用户提到摄影、拍照等" +
+         "- leisure: 是否休闲游（可选，Boolean类型，默认false）- 用户强调轻松、休闲" +
+         "- selfDriving: 是否自驾游（可选，Boolean类型，默认false）- 用户提到自驾、开车" +
+         "- hasElectricVehicle: 是否电动车（可选，Boolean类型，默认false）- 用户提到电动车、新能源车" +
+         "\n返回内容：工具会返回结构化的路线数据，包括天气、景点、设施等信息。" +
+         "\n\n【你应该怎么做】：" +
+         "1. 在调用工具前，先从用户的话语中提取关键信息（老人/小孩/自驾/兴趣爱好等）" +
+         "2. 调用工具后，不要直接输出工具返回的内容" +
+         "3. 要基于用户的具体描述，用自己的语言解释推荐理由" +
+         "4. 给出针对性的建议，展现你对用户需求的理解" +
+         "5. 如用户提到老人，要特别说明为何选择这些轻松的景点" +
+         "6. 如用户提到摄影，要说明拍照的最佳时间和技巧" +
+         "7. 如用户自驾，要提醒停车和充电事项" +
+         "\n\n适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线、" +
+         "带老人/小孩出游、摄影爱好者、自驾游等各种场景。")
     public String recommendRoute(
             String duration,
             String visitDate,
@@ -316,23 +323,26 @@ public class AiToolService {
     }
     
     /**
-     * 格式化推荐结果（包含基础设施）
+     * 格式化推荐结果（简化版 - 返回结构化数据供AI分析）
+     * 重要：返回的是数据要点，不是完整的话术，让AI有空间进行个性化解读
      */
     private String formatRecommendation(RouteRecommendation recommendation) {
         StringBuilder sb = new StringBuilder();
         
-        // 标题
-        sb.append(recommendation.getTitle()).append("\n\n");
+        sb.append("【路线推荐数据】\n");
+        sb.append("路线类型：").append(recommendation.getTitle()).append("\n");
         
         // 天气信息
         if (recommendation.getWeatherInfo() != null && !recommendation.getWeatherInfo().isEmpty()) {
-            sb.append(recommendation.getWeatherInfo()).append("\n\n");
+            sb.append("天气：").append(recommendation.getWeatherInfo()).append("\n");
         }
+        
+        sb.append("\n【行程安排】\n");
         
         // 路线分段
         if (recommendation.getSegments() != null) {
             for (RouteSegment segment : recommendation.getSegments()) {
-                sb.append("⏰ ").append(segment.getPeriod());
+                sb.append("\n时段：").append(segment.getPeriod());
                 if (segment.getTimeRange() != null) {
                     sb.append(" (").append(segment.getTimeRange()).append(")");
                 }
@@ -343,46 +353,135 @@ public class AiToolService {
                     sb.append(segment.getDescription()).append("\n");
                 }
                 
-                // 景点列表
+                // 景点列表 - 简化格式
                 if (segment.getScenics() != null && !segment.getScenics().isEmpty()) {
+                    sb.append("景点：\n");
                     for (ScenicItem scenic : segment.getScenics()) {
-                        sb.append("📍 ").append(scenic.getName());
-                        sb.append(" (").append(scenic.getDuration()).append("分钟)");
+                        sb.append("- ").append(scenic.getName());
+                        sb.append(" | ").append(scenic.getDuration()).append("分钟");
                         if (scenic.getReason() != null) {
-                            sb.append(" - ").append(scenic.getReason());
+                            sb.append(" | 特点：").append(scenic.getReason());
                         }
                         sb.append("\n");
                         if (scenic.getTips() != null) {
-                            sb.append("   💡 ").append(scenic.getTips()).append("\n");
+                            sb.append("  提示：").append(scenic.getTips()).append("\n");
                         }
                     }
                 }
                 
-                // 基础设施推荐
+                // 基础设施推荐 - 简化格式
                 if (segment.getFacilityRecommendation() != null) {
-                    sb.append(formatFacilityRecommendation(segment.getFacilityRecommendation()));
+                    sb.append(formatFacilityRecommendationSimple(segment.getFacilityRecommendation()));
                 }
-                
+            }
+        }
+        
+        sb.append("\n【通用建议】\n");
+        // 温馨提示 - 只列出要点
+        if (recommendation.getTips() != null) {
+            sb.append(recommendation.getTips()).append("\n");
+        }
+        
+        sb.append("\n【数据统计】\n");
+        if (recommendation.getSummary() != null) {
+            sb.append(recommendation.getSummary()).append("\n");
+        }
+        
+        sb.append("\n【AI请注意】以上是基础推荐数据，请你基于用户的具体情况（年龄、兴趣、出行方式等）进行个性化解读和建议！");
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 格式化基础设施推荐（简化版 - 包含距离信息）
+     */
+    private String formatFacilityRecommendationSimple(RouteRecommendService.FacilityRecommendation facility) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 餐厅推荐（优先显示）
+        if (facility.getRestaurants() != null && !facility.getRestaurants().isEmpty()) {
+            sb.append("🍽️ 推荐餐厅：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
+                sb.append("  ").append(count++).append(". ").append(restaurant.getName());
+                if (restaurant.getDistance() != null) {
+                    sb.append("（").append(restaurant.getDistance()).append("）");
+                }
+                sb.append("\n");
+            }
+        } else if (facility.getTips() != null && facility.getTips().contains("餐厅")) {
+            // 即使没有具体餐厅数据，也显示提示信息
+            sb.append("🍽️ 用餐建议：景区内有多家餐厅可供选择\n");
+        }
+        
+        // 住宿推荐（显示距离）
+        if (facility.getAccommodations() != null && !facility.getAccommodations().isEmpty()) {
+            sb.append("🏨 推荐住宿：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem accommodation : facility.getAccommodations()) {
+                sb.append("  ").append(count++).append(". ").append(accommodation.getName());
+                if (accommodation.getDistance() != null) {
+                    sb.append("（").append(accommodation.getDistance()).append("）");
+                }
                 sb.append("\n");
             }
         }
         
-        // 温馨提示
-        if (recommendation.getTips() != null) {
-            sb.append(recommendation.getTips()).append("\n\n");
+        // 停车场推荐（显示距离）
+        if (facility.getParkings() != null && !facility.getParkings().isEmpty()) {
+            sb.append("🅿️ 推荐停车场：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
+                sb.append("  ").append(count++).append(". ").append(parking.getName());
+                if (parking.getDistance() != null) {
+                    sb.append("（").append(parking.getDistance()).append("）");
+                }
+                sb.append("\n");
+            }
         }
         
-        // 总结
-        if (recommendation.getSummary() != null) {
-            sb.append("📋 ").append(recommendation.getSummary());
+        // 充电桩推荐（显示距离）
+        if (facility.getChargingStations() != null && !facility.getChargingStations().isEmpty()) {
+            sb.append("🔌 推荐充电桩：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
+                sb.append("  ").append(count++).append(". ").append(charging.getName());
+                if (charging.getDistance() != null) {
+                    sb.append("（").append(charging.getDistance()).append("）");
+                }
+                sb.append("\n");
+            }
+        }
+        
+        // 卫生间位置（简化显示）
+        if (facility.getToilets() != null && !facility.getToilets().isEmpty()) {
+            sb.append("🚻 附近卫生间：");
+            sb.append(facility.getToilets().stream()
+                    .map(RouteRecommendService.FacilityItem::getName)
+                    .limit(3)
+                    .reduce((a, b) -> a + "、" + b)
+                    .orElse(""));
+            sb.append("\n");
+        }
+        
+        // 其他服务设施（简化显示）
+        if (facility.getServices() != null && !facility.getServices().isEmpty()) {
+            sb.append("ℹ️ 服务设施：");
+            sb.append(facility.getServices().stream()
+                    .map(RouteRecommendService.FacilityItem::getName)
+                    .limit(3)
+                    .reduce((a, b) -> a + "、" + b)
+                    .orElse(""));
+            sb.append("\n");
         }
         
         return sb.toString();
     }
     
     /**
-     * 格式化基础设施推荐
+     * 格式化基础设施推荐（详细版 - 已弃用，保留用于兼容）
      */
+    @Deprecated
     private String formatFacilityRecommendation(RouteRecommendService.FacilityRecommendation facility) {
         StringBuilder sb = new StringBuilder();
         
