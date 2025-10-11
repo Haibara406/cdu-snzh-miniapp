@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.*;
 import com.snzh.domain.vo.PageVo;
@@ -69,6 +70,7 @@ public class AppUserController {
 
 
     // ----------------------- 管理端 -------------------------------
+    @RequireAdmin
     @GetMapping("/info/{userId}")
     @Operation(summary = "根据用户ID获取信息", description = "管理端获取用户详情")
     public ResponseResult<UserInfoVO> getUserInfoById(@PathVariable("userId") Long userId) {
@@ -76,6 +78,7 @@ public class AppUserController {
         return ResponseResult.success(userService.getUserInfo(userId));
     }
 
+    @RequireAdmin
     @Operation(summary = "搜索用户列表", description = "管理端搜索用户列表")
     @PostMapping("/search")
     public ResponseResult<PageVo<UserListVO>> searchUserList(@RequestBody @Valid UserSearchDTO userSearchDTO){
@@ -83,6 +86,7 @@ public class AppUserController {
         return ResponseResult.success(userService.getUserOrSearch(userSearchDTO));
     }
 
+    @RequireAdmin
     @Operation(summary = "获取用户列表", description = "管理端获取用户列表")
     @GetMapping("/list")
     public ResponseResult<PageVo<UserListVO>> getUserList() {
@@ -90,6 +94,7 @@ public class AppUserController {
         return ResponseResult.success(userService.getUserOrSearch(null));
     }
 
+    @RequireAdmin
     @Operation(summary = "更新用户状态")
     @PostMapping("/update/status")
     public ResponseResult<Boolean> updateStatus(@RequestBody @Valid UpdateRoleStatusDTO updateRoleStatusDTO) {

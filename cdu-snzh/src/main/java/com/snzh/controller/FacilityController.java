@@ -1,6 +1,7 @@
 package com.snzh.controller;
 
 import cn.hutool.json.JSONObject;
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.FacilityMapRequestDTO;
 import com.snzh.domain.dto.FacilityQueryDTO;
@@ -96,6 +97,8 @@ public class FacilityController {
     }
 
     // -----------------------------管理端-------------------------------------
+
+    @RequireAdmin
     @GetMapping("/page")
     @Operation(summary = "分页查询设施列表", description = "支持按名称、类型等条件筛选")
     public ResponseResult<PageVo<FacilityVO>> getFacilityPage(@Valid FacilityQueryDTO queryDTO) {
@@ -103,6 +106,7 @@ public class FacilityController {
         return ResponseResult.success(page);
     }
 
+    @RequireAdmin
     @PostMapping("/add")
     @Operation(summary = "新增设施", description = "添加新的设施信息")
     public ResponseResult<Long> addFacility(@Valid @RequestBody FacilitySaveDTO saveDTO) {
@@ -110,6 +114,7 @@ public class FacilityController {
         return ResponseResult.success(id);
     }
 
+    @RequireAdmin
     @PutMapping("/update")
     @Operation(summary = "修改设施", description = "更新设施信息")
     public ResponseResult<Boolean> updateFacility(@Valid @RequestBody FacilitySaveDTO saveDTO) {
@@ -117,6 +122,7 @@ public class FacilityController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除设施", description = "批量删除设施")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
@@ -124,6 +130,7 @@ public class FacilityController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新设施状态", description = "启用或禁用设施")
     public ResponseResult<Boolean> updateFacilityStatus(@PathVariable("id")  Long id, @PathVariable("status") Integer status) {

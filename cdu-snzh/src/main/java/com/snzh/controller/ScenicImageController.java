@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.ScenicImageQueryDTO;
 import com.snzh.domain.vo.PageVo;
@@ -38,6 +39,7 @@ public class ScenicImageController {
 
     // -----------------------------管理端-------------------------------------
 
+    @RequireAdmin
     @GetMapping("/gallery")
     @Operation(summary = "获取景点图集", description = "根据景点ID获取图片列表")
     public ResponseResult<PageVo<ScenicImageVO>> getImagePage(@Valid ScenicImageQueryDTO dto) {
@@ -45,6 +47,7 @@ public class ScenicImageController {
         return ResponseResult.success(images);
     }
 
+    @RequireAdmin
     @PostMapping("/upload")
     @Operation(summary = "后台上传照片")
     public ResponseResult<Boolean> uploadPhoto(
@@ -55,12 +58,14 @@ public class ScenicImageController {
         return ResponseResult.success(scenicImageService.uploadPhoto(file, name, scenicId, sort));
     }
 
+    @RequireAdmin
     @PutMapping("/cover/{scenicId}/{scenicImageId}")
     @Operation(summary = "将图片设置为封面")
     public ResponseResult<Boolean> setCoverPhoto(@PathVariable Integer scenicId, @PathVariable Integer scenicImageId){
         return ResponseResult.success(scenicImageService.setCoverPhoto(scenicId, scenicImageId));
     }
 
+    @RequireAdmin
     @Operation(summary = "后台批量删除照片")
     @DeleteMapping("/batch/delete")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {

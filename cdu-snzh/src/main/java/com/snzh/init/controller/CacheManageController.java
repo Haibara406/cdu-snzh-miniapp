@@ -1,5 +1,6 @@
 package com.snzh.init.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.init.service.IInitService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/admin/cache")
 @RequiredArgsConstructor
+@RequireAdmin
 public class CacheManageController {
 
     private final IInitService initService;

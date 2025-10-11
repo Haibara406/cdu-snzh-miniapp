@@ -56,12 +56,13 @@ public class JwtUtil {
     /**
      * 生成 Access Token（管理员）
      */
-    public String generateAdminAccessToken(String adminId, String username, String status) {
+    public String generateAdminAccessToken(String adminId, String username, String status, String roleType) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", adminId);
         claims.put("username", username);
         claims.put("status", status);
         claims.put("userType", "ADMIN");
+        claims.put("roleType", roleType);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -127,6 +128,10 @@ public class JwtUtil {
 
     public String getUsername(String token) {
         return parseToken(token).get("username", String.class);
+    }
+
+    public String getRoleType(String token) {
+        return parseToken(token).get("roleType", String.class);
     }
 }
 

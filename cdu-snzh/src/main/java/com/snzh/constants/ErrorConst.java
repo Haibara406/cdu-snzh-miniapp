@@ -187,4 +187,16 @@ public class ErrorConst {
 
     /** 需要管理员权限 */
     public static final String REQUIRE_ADMIN_PERMISSION = "需要管理员权限";
+
+    /** 需要超级管理员权限 */
+    public static final String REQUIRE_SUPER_ADMIN_PERMISSION = "需要超级管理员权限";
+
+    /** 管理员用户名已存在 */
+    public static final String ADMIN_USERNAME_EXISTS = "管理员用户名已存在";
+
+    /** 不能删除超级管理员 */
+    public static final String CANNOT_DELETE_SUPER_ADMIN = "不能删除超级管理员";
+
+    /** 不能禁用超级管理员 */
+    public static final String CANNOT_DISABLE_SUPER_ADMIN = "不能禁用超级管理员";
 }

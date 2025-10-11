@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.*;
 import com.snzh.domain.vo.*;
@@ -92,6 +93,7 @@ public class OrderController {
 
     // ==================== 管理端接口 ====================
 
+    @RequireAdmin
     @GetMapping("/admin/list")
     @Operation(summary = "【管理端】查询订单列表", description = "管理端分页查询订单列表，支持多条件筛选")
     public ResponseResult<PageVo<OrderListVO>> getAdminOrderList(@Valid AdminOrderQueryDTO dto) {
@@ -99,6 +101,7 @@ public class OrderController {
         return ResponseResult.success(orders);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/detail/{orderId}")
     @Operation(summary = "【管理端】查询订单详情", description = "管理端查询订单详情，无权限限制")
     public ResponseResult<OrderVO> getAdminOrderDetail(
@@ -108,6 +111,7 @@ public class OrderController {
         return ResponseResult.success(orderVO);
     }
 
+    @RequireAdmin
     @PostMapping("/admin/cancel")
     @Operation(summary = "【管理端】强制取消订单", description = "管理端强制取消订单，不受日期限制")
     public ResponseResult<Void> adminCancelOrder(@Valid @RequestBody AdminCancelDTO dto) {
@@ -115,6 +119,7 @@ public class OrderController {
         return ResponseResult.success();
     }
 
+    @RequireAdmin
     @PostMapping("/admin/refund")
     @Operation(summary = "【管理端】退款处理", description = "管理端处理订单退款")
     public ResponseResult<Void> adminRefund(@Valid @RequestBody AdminRefundDTO dto) {
@@ -122,6 +127,7 @@ public class OrderController {
         return ResponseResult.success();
     }
 
+    @RequireAdmin
     @PutMapping("/admin/update")
     @Operation(summary = "【管理端】修改订单信息", description = "管理端修改订单基本信息")
     public ResponseResult<Void> adminUpdateOrder(@Valid @RequestBody AdminOrderUpdateDTO dto) {
@@ -129,6 +135,7 @@ public class OrderController {
         return ResponseResult.success();
     }
 
+    @RequireAdmin
     @PostMapping("/admin/complete/{orderId}")
     @Operation(summary = "【管理端】手动完成订单", description = "管理端手动完成订单")
     public ResponseResult<Void> adminCompleteOrder(
@@ -138,6 +145,7 @@ public class OrderController {
         return ResponseResult.success();
     }
 
+    @RequireAdmin
     @PostMapping("/admin/batch")
     @Operation(summary = "【管理端】批量操作", description = "管理端批量操作订单（取消/退款/完成）")
     public ResponseResult<Map<Long, Boolean>> adminBatchOperation(@Valid @RequestBody BatchOperationDTO dto) {
@@ -145,6 +153,7 @@ public class OrderController {
         return ResponseResult.success(resultMap);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/dashboard")
     @Operation(summary = "【管理端】数据看板", description = "获取订单数据看板信息")
     public ResponseResult<OrderDashboardVO> getDashboard() {
@@ -152,6 +161,7 @@ public class OrderController {
         return ResponseResult.success(dashboard);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/trend")
     @Operation(summary = "【管理端】订单趋势统计", description = "获取订单趋势统计数据")
     public ResponseResult<List<OrderTrendVO>> getOrderTrend(
@@ -163,6 +173,7 @@ public class OrderController {
         return ResponseResult.success(trendList);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/status")
     @Operation(summary = "【管理端】订单状态分布", description = "获取订单状态分布统计")
     public ResponseResult<Map<Integer, Long>> getStatusDistribution() {
@@ -170,6 +181,7 @@ public class OrderController {
         return ResponseResult.success(statusMap);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/type")
     @Operation(summary = "【管理端】订单类型分布", description = "获取订单类型分布统计")
     public ResponseResult<Map<Integer, Long>> getTypeDistribution() {
@@ -177,6 +189,7 @@ public class OrderController {
         return ResponseResult.success(typeMap);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/revenue")
     @Operation(summary = "【管理端】销售额统计", description = "获取销售额统计数据")
     public ResponseResult<List<OrderTrendVO>> getRevenueStatistics(
@@ -188,6 +201,7 @@ public class OrderController {
         return ResponseResult.success(revenueList);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/conversion")
     @Operation(summary = "【管理端】转化率统计", description = "获取订单转化率统计信息")
     public ResponseResult<ConversionStatisticsVO> getConversionStatistics() {
@@ -195,6 +209,7 @@ public class OrderController {
         return ResponseResult.success(statistics);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/statistics/user")
     @Operation(summary = "【管理端】用户消费统计", description = "获取用户消费统计信息")
     public ResponseResult<UserStatisticsVO> getUserStatistics() {
@@ -202,6 +217,7 @@ public class OrderController {
         return ResponseResult.success(statistics);
     }
 
+    @RequireAdmin
     @GetMapping("/admin/quick-filter")
     @Operation(summary = "【管理端】快捷筛选数据", description = "获取快捷筛选数据")
     public ResponseResult<QuickFilterVO> getQuickFilter() {

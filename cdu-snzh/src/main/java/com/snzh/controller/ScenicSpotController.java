@@ -1,6 +1,7 @@
 package com.snzh.controller;
 
 import cn.hutool.json.JSONObject;
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.ScenicQueryDTO;
 import com.snzh.domain.dto.ScenicSpotMapRequestDTO;
@@ -102,7 +103,7 @@ public class ScenicSpotController {
 
     // -----------------------------管理端-------------------------------------
 
-
+    @RequireAdmin
     @GetMapping("/page")
     @Operation(summary = "分页查询景点列表", description = "分页查询景点列表")
     public ResponseResult<PageVo<ScenicSpotVO>> getScenicPage(@Valid ScenicQueryDTO dto) {
@@ -110,6 +111,7 @@ public class ScenicSpotController {
         return ResponseResult.success(result);
     }
 
+    @RequireAdmin
     @PostMapping
     @Operation(summary = "创建景点", description = "创建新的景点")
     public ResponseResult<Long> addScenicSpot(@Valid @RequestBody ScenicSpotSaveDTO dto) {
@@ -117,18 +119,21 @@ public class ScenicSpotController {
         return ResponseResult.success(id);
     }
 
+    @RequireAdmin
     @PutMapping("/update")
     @Operation(summary = "修改景点", description = "修改景点信息")
     public ResponseResult<Boolean> updateScenicSpot(@Valid @RequestBody ScenicSpotSaveDTO dto) {
         return ResponseResult.success(scenicSpotService.updateScenicSpot(dto));
     }
 
+    @RequireAdmin
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除景点", description = "根据ID批量删除景点")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
         return ResponseResult.success(scenicSpotService.deleteByIds(ids));
     }
 
+    @RequireAdmin
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新景点状态", description = "更新景点状态")
     public ResponseResult<Boolean> updateScenicSpotStatus(
@@ -137,6 +142,7 @@ public class ScenicSpotController {
         return ResponseResult.success(scenicSpotService.updateScenicSpotStatus(id, status));
     }
 
+    @RequireAdmin
     @PutMapping("/area/update")
     @Operation(summary = "更新景区信息", description = "更新蜀南竹海景区信息")
     public ResponseResult<Boolean> updateScenicArea(@Valid @RequestBody ScenicSpotSaveDTO dto) {

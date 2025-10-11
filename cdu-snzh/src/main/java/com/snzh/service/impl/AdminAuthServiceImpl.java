@@ -76,7 +76,8 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
         String accessToken = jwtUtil.generateAdminAccessToken(
                 String.valueOf(adminUser.getId()),
                 adminUser.getUsername(),
-                String.valueOf(adminUser.getStatus())
+                String.valueOf(adminUser.getStatus()),
+                String.valueOf(adminUser.getRoleType())
         );
         String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(adminUser.getId()));
 

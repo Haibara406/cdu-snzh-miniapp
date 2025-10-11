@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.TicketQueryDTO;
 import com.snzh.domain.dto.TicketSaveDTO;
@@ -52,6 +53,7 @@ public class ScenicTicketController {
 
     // -----------------------------管理端-------------------------------------
 
+    @RequireAdmin
     @GetMapping("/page")
     @Operation(summary = "分页查询景点门票列表", description = "支持按名称、类型等条件筛选")
     public ResponseResult<PageVo<ScenicTicketVO>> getTicketPage(@Valid TicketQueryDTO queryDTO) {
@@ -59,6 +61,7 @@ public class ScenicTicketController {
         return ResponseResult.success(page);
     }
 
+    @RequireAdmin
     @PostMapping("/add")
     @Operation(summary = "新增门票", description = "添加新的景点门票信息")
     public ResponseResult<Long> addTicket(@Valid @RequestBody TicketSaveDTO saveDTO) {
@@ -66,6 +69,7 @@ public class ScenicTicketController {
         return ResponseResult.success(id);
     }
 
+    @RequireAdmin
     @PutMapping("/update/{id}")
     @Operation(summary = "修改门票", description = "更新门票信息")
     public ResponseResult<Boolean> updateTicket(@Valid @RequestBody TicketSaveDTO saveDTO) {
@@ -73,6 +77,7 @@ public class ScenicTicketController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除门票", description = "批量删除门票")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
@@ -80,6 +85,7 @@ public class ScenicTicketController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新门票状态", description = "启用或禁用门票")
     public ResponseResult<Boolean> updateTicketStatus(

@@ -30,7 +30,7 @@ public class AdminAuthController {
     private final IAdminAuthService adminAuthService;
 
     @PostMapping("/login")
-    @Operation(summary = "管理 员登录", description = "通过账号密码登录")
+    @Operation(summary = "管理员登录", description = "通过账号密码登录")
     public ResponseResult<AdminLoginVO> login(@Valid @RequestBody AdminLoginDTO loginDTO, HttpServletRequest request) {
         log.info("管理员登录请求: username={}", loginDTO.getUsername());
         return ResponseResult.success(adminAuthService.login(loginDTO, request));

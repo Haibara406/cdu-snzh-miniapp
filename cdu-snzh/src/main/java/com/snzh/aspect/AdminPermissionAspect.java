@@ -45,7 +45,7 @@ public class AdminPermissionAspect {
             throw new UnauthorizedException(ErrorConst.REQUIRE_ADMIN_PERMISSION);
         }
 
-        // 预留：角色验证扩展
+        // 获取注解
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         RequireAdmin requireAdmin = method.getAnnotation(RequireAdmin.class);
@@ -55,11 +55,21 @@ public class AdminPermissionAspect {
             requireAdmin = joinPoint.getTarget().getClass().getAnnotation(RequireAdmin.class);
         }
         
-        // 当前版本：所有管理员都有权限，角色验证预留扩展
-        // 未来可在此处添加细化的角色权限验证
+        // 超级管理员权限验证
+        if (requireAdmin != null && requireAdmin.superAdminOnly()) {
+            String roleTypeStr = UserContext.get("roleType");
+            Integer roleType = roleTypeStr != null ? Integer.valueOf(roleTypeStr) : null;
+            
+            // 0 = 超级管理员
+            if (roleType == null || roleType != 0) {
+                log.warn("非超级管理员尝试访问超管接口：{}", joinPoint.getSignature());
+                throw new UnauthorizedException(ErrorConst.REQUIRE_SUPER_ADMIN_PERMISSION);
+            }
+        }
+        
+        // 预留：角色验证扩展
         if (requireAdmin != null && requireAdmin.roles().length > 0) {
-            // Integer roleType = UserContext.get("roleType");
-            // 校验roleType是否在允许的roles数组中
+            // 自定义角色列表验证（预留扩展）
             log.debug("角色权限验证（预留扩展）：{}", (Object) requireAdmin.roles());
         }
     }

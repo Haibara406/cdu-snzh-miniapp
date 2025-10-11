@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.FacilityTypeQueryDTO;
 import com.snzh.domain.dto.FacilityTypeSaveDTO;
@@ -42,6 +43,7 @@ public class FacilityTypeController {
 
     // ------------------------- 管理端 ------------------------------
 
+    @RequireAdmin
     @GetMapping("/page")
     @Operation(summary = "分页查询设施类型列表", description = "支持按名称等条件筛选")
     public ResponseResult<PageVo<FacilityTypeVO>> getTypePage(@Valid FacilityTypeQueryDTO queryDTO) {
@@ -49,6 +51,7 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.getTypePage(queryDTO));
     }
 
+    @RequireAdmin
     @GetMapping("/details/{id}")
     @Operation(summary = "获取设施类型详情", description = "根据ID获取设施类型详情")
     public ResponseResult<FacilityTypeVO> getTypeDetail(@PathVariable("id")  Long id) {
@@ -56,6 +59,7 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.getTypeById(id));
     }
 
+    @RequireAdmin
     @PostMapping("/add")
     @Operation(summary = "新增设施类型", description = "添加新的设施类型")
     public ResponseResult<Long> addType(@Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
@@ -63,6 +67,7 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.addType(saveDTO));
     }
 
+    @RequireAdmin
     @PutMapping("/update")
     @Operation(summary = "修改设施类型", description = "更新设施类型信息")
     public ResponseResult<Boolean> updateType(@Valid @RequestBody FacilityTypeSaveDTO saveDTO) {
@@ -70,6 +75,7 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.updateType(saveDTO));
     }
 
+    @RequireAdmin
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除设施类型", description = "批量删除设施类型")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
@@ -77,6 +83,7 @@ public class FacilityTypeController {
         return ResponseResult.success(facilityTypeService.deleteByIds(ids));
     }
 
+    @RequireAdmin
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新设施类型状态", description = "启用或禁用设施类型")
     public ResponseResult<Boolean> updateTypeStatus(@PathVariable("id")  Long id, @PathVariable("status")  Integer status) {

@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.service.INotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ public class NotificationController {
 
     private final INotificationService notificationService;
 
+    @RequireAdmin
     @PostMapping("/admin/system-announcement")
     @Operation(summary = "【管理端】发送系统公告", description = "向指定用户发送系统公告通知")
     public ResponseResult<Boolean> sendSystemAnnouncement(
@@ -37,6 +39,7 @@ public class NotificationController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @PostMapping("/admin/batch-announcement")
     @Operation(summary = "【管理端】批量发送系统公告", description = "向多个用户批量发送系统公告")
     public ResponseResult<String> batchSendSystemAnnouncement(

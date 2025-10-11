@@ -1,5 +1,6 @@
 package com.snzh.controller;
 
+import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.TicketTypeQueryDTO;
 import com.snzh.domain.dto.TicketTypeSaveDTO;
@@ -36,6 +37,7 @@ public class TicketTypeController {
 
     // -----------------------------管理端-------------------------------------
 
+    @RequireAdmin
     @GetMapping("/detail/{id}")
     @Operation(summary = "获取票种详情", description = "根据票种ID获取票种信息")
     public ResponseResult<TicketTypeVO> getTicketTypeDetail(
@@ -44,6 +46,7 @@ public class TicketTypeController {
         return ResponseResult.success(ticketType);
     }
 
+    @RequireAdmin
     @GetMapping("/list")
     @Operation(summary = "查询票种列表", description = "获取所有可用票种（不分页）")
     public ResponseResult<List<TicketTypeVO>> listTicketTypes() {
@@ -51,6 +54,7 @@ public class TicketTypeController {
         return ResponseResult.success(ticketTypes);
     }
 
+    @RequireAdmin
     @GetMapping("/page")
     @Operation(summary = "分页查询票种列表", description = "支持按名称、状态等条件筛选")
     public ResponseResult<PageVo<TicketTypeVO>> getTicketTypePage(@Valid TicketTypeQueryDTO queryDTO) {
@@ -58,6 +62,7 @@ public class TicketTypeController {
         return ResponseResult.success(page);
     }
 
+    @RequireAdmin
     @PostMapping("/add")
     @Operation(summary = "新增票种", description = "添加新的票种")
     public ResponseResult<Long> addTicketType(@Valid @RequestBody TicketTypeSaveDTO saveDTO) {
@@ -65,6 +70,7 @@ public class TicketTypeController {
         return ResponseResult.success(id);
     }
 
+    @RequireAdmin
     @PutMapping("/update/{id}")
     @Operation(summary = "修改票种", description = "更新票種信息")
     public ResponseResult<Boolean> updateTicketType(
@@ -73,6 +79,7 @@ public class TicketTypeController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @DeleteMapping("/batch/delete")
     @Operation(summary = "批量删除票种", description = "根据ID批量删除票种")
     public ResponseResult<Boolean> deleteByIds(@RequestBody List<Long> ids) {
@@ -80,6 +87,7 @@ public class TicketTypeController {
         return ResponseResult.success(success);
     }
 
+    @RequireAdmin
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新票种状态", description = "启用或禁用票种")
     public ResponseResult<Boolean> updateTicketTypeStatus(

@@ -46,12 +46,14 @@ public class JwtInterceptor implements HandlerInterceptor {
         String status = "1";
         String userType;
         String username;
+        String roleType;
 
         try {
             userId = jwtUtil.getUserId(token);
             status = jwtUtil.getStatus(token);
             userType = jwtUtil.getUserType(token);
             username = jwtUtil.getUsername(token);
+            roleType = jwtUtil.getRoleType(token);
             
             if(userId == null || status == null || userType == null){
                 writeUnauthorized(response, ErrorConst.INVALID_TOKEN);
@@ -72,8 +74,12 @@ public class JwtInterceptor implements HandlerInterceptor {
             // 存入 ThreadLocal
             UserContext.set("userId", userId);
             UserContext.set("userType", userType);
+            UserContext.set("status", status);
             if (username != null) {
                 UserContext.set("username", username);
+            }
+            if (roleType != null) {
+                UserContext.set("roleType", roleType);
             }
             return true;
 
@@ -82,6 +88,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             userId = e.getClaims().getSubject();
             userType = (String) e.getClaims().get("userType");
             username = (String) e.getClaims().get("username");
+            roleType = (String) e.getClaims().get("roleType");
             
             // 根据用户类型选择不同的Redis Key
             RedisKeyManage redisKey = "ADMIN".equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
@@ -96,7 +103,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 // 根据用户类型生成新的 Access Token
                 String newAccessToken;
                 if ("ADMIN".equals(userType)) {
-                    newAccessToken = jwtUtil.generateAdminAccessToken(userId, username, status);
+                    newAccessToken = jwtUtil.generateAdminAccessToken(userId, username, status, roleType);
                 } else {
                     newAccessToken = jwtUtil.generateAccessToken(userId, status);
                 }
@@ -105,8 +112,12 @@ public class JwtInterceptor implements HandlerInterceptor {
                 // 存入 ThreadLocal
                 UserContext.set("userId", userId);
                 UserContext.set("userType", userType);
+                UserContext.set("status", status);
                 if (username != null) {
                     UserContext.set("username", username);
+                }
+                if (roleType != null) {
+                    UserContext.set("roleType", roleType);
                 }
                 return true;
 

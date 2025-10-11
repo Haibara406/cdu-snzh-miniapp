@@ -142,4 +142,14 @@ public class ValidationConstants {
 
     public static final String ADMIN_PASSWORD_NOT_NULL = "密码不能为空";
 
+    public static final String ADMIN_ID_NOT_NULL = "管理员ID不能为空";
+
+    public static final String ADMIN_USERNAME_LENGTH = "用户名长度应在3-50个字符之间";
+
+    public static final String ADMIN_PASSWORD_LENGTH = "密码长度应在6-20个字符之间";
+
+    public static final String ADMIN_REAL_NAME_LENGTH = "真实姓名长度应在2-50个字符之间";
+
+    public static final String ADMIN_IDS_NOT_EMPTY = "管理员ID列表不能为空";
+
 }
