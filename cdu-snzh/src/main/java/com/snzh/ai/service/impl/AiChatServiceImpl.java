@@ -267,9 +267,11 @@ public class AiChatServiceImpl implements IAiChatService {
                     Boolean hiking = getArgumentAsBoolean(arguments, "hiking", "arg4");
                     Boolean photography = getArgumentAsBoolean(arguments, "photography", "arg5");
                     Boolean leisure = getArgumentAsBoolean(arguments, "leisure", "arg6");
+                    Boolean selfDriving = getArgumentAsBoolean(arguments, "selfDriving", "arg7");
+                    Boolean hasElectricVehicle = getArgumentAsBoolean(arguments, "hasElectricVehicle", "arg8");
                     
                     yield aiToolService.recommendRoute(duration, visitDate, hasChildren, hasElderly, 
-                                                      hiking, photography, leisure);
+                                                      hiking, photography, leisure, selfDriving, hasElectricVehicle);
                 }
                 
                 case "createOrder" -> {

@@ -239,11 +239,13 @@ public class AiToolService {
          "- hiking: 是否徒步（可选，Boolean类型，默认false）" +
          "- photography: 是否摄影（可选，Boolean类型，默认false）" +
          "- leisure: 是否休闲游（可选，Boolean类型，默认false）" +
-         "返回内容包括：天气信息、详细的分时段行程安排、推荐景点、预计游览时间、推荐理由、温馨提示等。" +
+         "- selfDriving: 是否自驾游（可选，Boolean类型，默认false，会推荐停车场）" +
+         "- hasElectricVehicle: 是否电动车（可选，Boolean类型，默认false，会推荐充电桩）" +
+         "返回内容包括：天气信息、详细的分时段行程安排、推荐景点、预计游览时间、推荐理由、停车充电设施、餐饮住宿等完整服务。" +
          "适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线、" +
-         "带老人/小孩出游、摄影爱好者等各种场景。" +
+         "带老人/小孩出游、摄影爱好者、自驾游等各种场景。" +
          "智能特性：会根据天气自动调整路线（如雨天推荐室内或有遮蔽的景点），" +
-         "根据人群特点推荐合适的景点（如有老人则避免爬山景点），优化景点顺序减少往返。")
+         "根据人群特点推荐合适的景点（如有老人则避免爬山景点），为自驾游客推荐停车场和充电桩，优化景点顺序减少往返。")
     public String recommendRoute(
             String duration,
             String visitDate,
@@ -251,7 +253,9 @@ public class AiToolService {
             Boolean hasElderly,
             Boolean hiking,
             Boolean photography,
-            Boolean leisure) {
+            Boolean leisure,
+            Boolean selfDriving,
+            Boolean hasElectricVehicle) {
         try {
             // 1. 解析游玩时长
             int durationHours = RouteRecommendService.parseDuration(duration);
@@ -264,6 +268,8 @@ public class AiToolService {
             preference.setHiking(hiking != null && hiking);
             preference.setPhotography(photography != null && photography);
             preference.setLeisure(leisure != null && leisure);
+            preference.setSelfDriving(selfDriving != null && selfDriving);
+            preference.setHasElectricVehicle(hasElectricVehicle != null && hasElectricVehicle);
             
             // 3. 获取天气信息
             try {
@@ -310,7 +316,7 @@ public class AiToolService {
     }
     
     /**
-     * 格式化推荐结果
+     * 格式化推荐结果（包含基础设施）
      */
     private String formatRecommendation(RouteRecommendation recommendation) {
         StringBuilder sb = new StringBuilder();
@@ -332,9 +338,13 @@ public class AiToolService {
                 }
                 sb.append("\n");
                 
+                // 描述（如午餐时间）
                 if (segment.getDescription() != null) {
-                    sb.append(segment.getDescription()).append("\n\n");
-                } else if (segment.getScenics() != null) {
+                    sb.append(segment.getDescription()).append("\n");
+                }
+                
+                // 景点列表
+                if (segment.getScenics() != null && !segment.getScenics().isEmpty()) {
                     for (ScenicItem scenic : segment.getScenics()) {
                         sb.append("📍 ").append(scenic.getName());
                         sb.append(" (").append(scenic.getDuration()).append("分钟)");
@@ -343,11 +353,17 @@ public class AiToolService {
                         }
                         sb.append("\n");
                         if (scenic.getTips() != null) {
-                            sb.append("   ").append(scenic.getTips()).append("\n");
+                            sb.append("   💡 ").append(scenic.getTips()).append("\n");
                         }
                     }
-                    sb.append("\n");
                 }
+                
+                // 基础设施推荐
+                if (segment.getFacilityRecommendation() != null) {
+                    sb.append(formatFacilityRecommendation(segment.getFacilityRecommendation()));
+                }
+                
+                sb.append("\n");
             }
         }
         
@@ -359,6 +375,120 @@ public class AiToolService {
         // 总结
         if (recommendation.getSummary() != null) {
             sb.append("📋 ").append(recommendation.getSummary());
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 格式化基础设施推荐
+     */
+    private String formatFacilityRecommendation(RouteRecommendService.FacilityRecommendation facility) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 餐厅推荐
+        if (facility.getRestaurants() != null && !facility.getRestaurants().isEmpty()) {
+            sb.append("\n🍽️ 推荐餐厅：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
+                sb.append("  ").append(count++).append(". ").append(restaurant.getName());
+                if (restaurant.getReason() != null) {
+                    sb.append(" - ").append(restaurant.getReason());
+                }
+                sb.append("\n");
+                if (restaurant.getAddress() != null) {
+                    sb.append("     地址：").append(restaurant.getAddress()).append("\n");
+                }
+                if (restaurant.getContactPhone() != null) {
+                    sb.append("     电话：").append(restaurant.getContactPhone()).append("\n");
+                }
+            }
+        }
+        
+        // 住宿推荐
+        if (facility.getAccommodations() != null && !facility.getAccommodations().isEmpty()) {
+            sb.append("\n🏨 推荐住宿：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem accommodation : facility.getAccommodations()) {
+                sb.append("  ").append(count++).append(". ").append(accommodation.getName());
+                sb.append("\n");
+                if (accommodation.getAddress() != null) {
+                    sb.append("     地址：").append(accommodation.getAddress()).append("\n");
+                }
+                if (accommodation.getContactPhone() != null) {
+                    sb.append("     电话：").append(accommodation.getContactPhone()).append("\n");
+                }
+            }
+        }
+        
+        // 停车场推荐
+        if (facility.getParkings() != null && !facility.getParkings().isEmpty()) {
+            sb.append("\n🅿️ 停车场：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
+                sb.append("  ").append(count++).append(". ").append(parking.getName());
+                if (parking.getReason() != null) {
+                    sb.append(" - ").append(parking.getReason());
+                }
+                sb.append("\n");
+                if (parking.getAddress() != null) {
+                    sb.append("     地址：").append(parking.getAddress()).append("\n");
+                }
+                if (parking.getContactPhone() != null) {
+                    sb.append("     电话：").append(parking.getContactPhone()).append("\n");
+                }
+            }
+        }
+        
+        // 充电桩推荐
+        if (facility.getChargingStations() != null && !facility.getChargingStations().isEmpty()) {
+            sb.append("\n🔌 充电桩：\n");
+            int count = 1;
+            for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
+                sb.append("  ").append(count++).append(". ").append(charging.getName());
+                if (charging.getReason() != null) {
+                    sb.append(" - ").append(charging.getReason());
+                }
+                sb.append("\n");
+                if (charging.getAddress() != null) {
+                    sb.append("     地址：").append(charging.getAddress()).append("\n");
+                }
+                if (charging.getContactPhone() != null) {
+                    sb.append("     电话：").append(charging.getContactPhone()).append("\n");
+                }
+            }
+        }
+        
+        // 卫生间位置
+        if (facility.getToilets() != null && !facility.getToilets().isEmpty()) {
+            sb.append("\n🚻 附近卫生间：\n");
+            for (RouteRecommendService.FacilityItem toilet : facility.getToilets()) {
+                sb.append("  · ").append(toilet.getName());
+                if (toilet.getAddress() != null) {
+                    sb.append(" (").append(toilet.getAddress()).append(")");
+                }
+                sb.append("\n");
+            }
+        }
+        
+        // 其他服务设施
+        if (facility.getServices() != null && !facility.getServices().isEmpty()) {
+            sb.append("\n🏥 服务设施：\n");
+            for (RouteRecommendService.FacilityItem service : facility.getServices()) {
+                sb.append("  · ").append(service.getName());
+                if (service.getReason() != null) {
+                    sb.append(" - ").append(service.getReason());
+                }
+                sb.append("\n");
+                if (service.getAddress() != null) {
+                    sb.append("    地址：").append(service.getAddress()).append("\n");
+                }
+            }
+        }
+        
+        // 设施提示
+        if (facility.getTips() != null && !facility.getTips().isEmpty()) {
+            sb.append("\n").append(facility.getTips()).append("\n");
         }
         
         return sb.toString();
