@@ -1,5 +1,9 @@
 package com.snzh.ai.tools;
 
+import com.snzh.ai.tools.RouteRecommendService.RouteRecommendation;
+import com.snzh.ai.tools.RouteRecommendService.RouteSegment;
+import com.snzh.ai.tools.RouteRecommendService.ScenicItem;
+import com.snzh.ai.tools.RouteRecommendService.UserPreference;
 import com.snzh.domain.dto.OrderCreateDTO;
 import com.snzh.domain.dto.OrderItemDTO;
 import com.snzh.domain.vo.CastVO;
@@ -35,6 +39,7 @@ public class AiToolService {
     private final IScenicSpotService scenicSpotService;
     private final IScenicTicketService scenicTicketService;
     private final IOrderService orderService;
+    private final RouteRecommendService routeRecommendService;
 
     /**
      * 查询当前实时天气
@@ -222,43 +227,175 @@ public class AiToolService {
     }
 
     /**
-     * 推荐游玩路线
-     * 注：这是简化版本，实际可以集成更复杂的路径规划算法
+     * 推荐游玩路线（智能版）
+     * 综合考虑天气、用户偏好、景点距离等因素
      */
-    @Tool("根据用户的游玩时长智能推荐合适的游玩路线和行程安排。" +
-         "参数说明：duration=游玩时长描述（必填，String类型，例如：'一天'、'半天'、'4小时'、'上午'、'下午'等）。" +
-         "返回内容包括：详细的分时段行程安排、推荐景点、预计游览时间、温馨提示等。" +
-         "适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线等。" +
-         "路线类型：支持半日游（4小时）、一日游（全天）和多日游，会根据时长自动匹配最优路线。" +
-         "注意：如果用户未明确说明游玩时长，应主动询问以便提供更准确的路线建议。")
-    public String recommendRoute(String duration) {
-        if (duration.contains("一天") || duration.contains("1天") || duration.contains("全天")) {
+    @Tool("根据用户的游玩时长、游玩场景和天气情况智能推荐最合适的游玩路线和行程安排。" +
+         "参数说明：" +
+         "- duration: 游玩时长（必填，String类型，例如：'一天'、'半天'、'4小时'、'两天'等）" +
+         "- visitDate: 游玩日期（可选，String类型，格式：yyyy-MM-dd，用于查询天气）" +
+         "- hasChildren: 是否有小孩（可选，Boolean类型，默认false）" +
+         "- hasElderly: 是否有老人（可选，Boolean类型，默认false）" +
+         "- hiking: 是否徒步（可选，Boolean类型，默认false）" +
+         "- photography: 是否摄影（可选，Boolean类型，默认false）" +
+         "- leisure: 是否休闲游（可选，Boolean类型，默认false）" +
+         "返回内容包括：天气信息、详细的分时段行程安排、推荐景点、预计游览时间、推荐理由、温馨提示等。" +
+         "适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线、" +
+         "带老人/小孩出游、摄影爱好者等各种场景。" +
+         "智能特性：会根据天气自动调整路线（如雨天推荐室内或有遮蔽的景点），" +
+         "根据人群特点推荐合适的景点（如有老人则避免爬山景点），优化景点顺序减少往返。")
+    public String recommendRoute(
+            String duration,
+            String visitDate,
+            Boolean hasChildren,
+            Boolean hasElderly,
+            Boolean hiking,
+            Boolean photography,
+            Boolean leisure) {
+        try {
+            // 1. 解析游玩时长
+            int durationHours = RouteRecommendService.parseDuration(duration);
+            
+            // 2. 构建用户偏好
+            UserPreference preference = new UserPreference();
+            preference.setDuration(durationHours);
+            preference.setHasChildren(hasChildren != null && hasChildren);
+            preference.setHasElderly(hasElderly != null && hasElderly);
+            preference.setHiking(hiking != null && hiking);
+            preference.setPhotography(photography != null && photography);
+            preference.setLeisure(leisure != null && leisure);
+            
+            // 3. 获取天气信息
+            try {
+                if (visitDate != null && !visitDate.isEmpty()) {
+                    LocalDate date = LocalDate.parse(visitDate);
+                    preference.setVisitDate(date);
+                    
+                    // 获取天气预报
+                    ForecastWeatherVO forecast = weatherService.getForecastWeather();
+                    if (forecast != null && forecast.getCasts() != null) {
+                        for (CastVO cast : forecast.getCasts()) {
+                            if (cast.getDate().equals(date.toString())) {
+                                preference.setWeatherCondition(cast.getDayweather());
+                                preference.setWeatherDesc(cast.getDayweather());
+                                preference.setTemperature(Integer.parseInt(cast.getDaytemp()));
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // 使用当前天气
+                    LiveWeatherVO weather = weatherService.getLiveWeather();
+                    if (weather != null) {
+                        preference.setWeatherCondition(weather.getWeather());
+                        preference.setWeatherDesc(weather.getWeather());
+                        preference.setTemperature(Integer.parseInt(weather.getTemperature()));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("获取天气信息失败，使用默认配置", e);
+            }
+            
+            // 4. 调用智能推荐服务
+            RouteRecommendation recommendation = routeRecommendService.recommendRoute(preference);
+            
+            // 5. 格式化输出
+            return formatRecommendation(recommendation);
+            
+        } catch (Exception e) {
+            log.error("路线推荐失败", e);
+            // 降级到简单推荐
+            return getSimpleRecommendation(duration);
+        }
+    }
+    
+    /**
+     * 格式化推荐结果
+     */
+    private String formatRecommendation(RouteRecommendation recommendation) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 标题
+        sb.append(recommendation.getTitle()).append("\n\n");
+        
+        // 天气信息
+        if (recommendation.getWeatherInfo() != null && !recommendation.getWeatherInfo().isEmpty()) {
+            sb.append(recommendation.getWeatherInfo()).append("\n\n");
+        }
+        
+        // 路线分段
+        if (recommendation.getSegments() != null) {
+            for (RouteSegment segment : recommendation.getSegments()) {
+                sb.append("⏰ ").append(segment.getPeriod());
+                if (segment.getTimeRange() != null) {
+                    sb.append(" (").append(segment.getTimeRange()).append(")");
+                }
+                sb.append("\n");
+                
+                if (segment.getDescription() != null) {
+                    sb.append(segment.getDescription()).append("\n\n");
+                } else if (segment.getScenics() != null) {
+                    for (ScenicItem scenic : segment.getScenics()) {
+                        sb.append("📍 ").append(scenic.getName());
+                        sb.append(" (").append(scenic.getDuration()).append("分钟)");
+                        if (scenic.getReason() != null) {
+                            sb.append(" - ").append(scenic.getReason());
+                        }
+                        sb.append("\n");
+                        if (scenic.getTips() != null) {
+                            sb.append("   ").append(scenic.getTips()).append("\n");
+                        }
+                    }
+                    sb.append("\n");
+                }
+            }
+        }
+        
+        // 温馨提示
+        if (recommendation.getTips() != null) {
+            sb.append(recommendation.getTips()).append("\n\n");
+        }
+        
+        // 总结
+        if (recommendation.getSummary() != null) {
+            sb.append("📋 ").append(recommendation.getSummary());
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 简单推荐（降级方案）
+     */
+    private String getSimpleRecommendation(String duration) {
+        if (duration != null && (duration.contains("一天") || duration.contains("1天") || duration.contains("全天"))) {
             return """
                     为您推荐一日游经典路线：
                     
                     ⏰ 上午 (08:00-12:00)
-                    📍 忘忧谷 (2小时) - 核心竹林景观，负氧离子含量极高
-                    📍 天宝寨 (1.5小时) - 登高望远，俯瞰竹海
+                    📍 忘忧谷 (120分钟) - 核心竹林景观，负氧离子含量极高
+                    📍 天宝寨 (90分钟) - 登高望远，俯瞰竹海
                     
                     🍽️ 中午 (12:00-13:30)
-                    📍 竹海人家 - 品尝地道竹笋宴
+                    📍 景区餐厅 - 品尝地道竹笋宴
                     
                     ⏰ 下午 (13:30-17:00)
-                    📍 七彩飞瀑 (1小时) - 拍照打卡圣地
-                    📍 翡翠长廊 (1.5小时) - 竹海精华路段
+                    📍 七彩飞瀑 (60分钟) - 拍照打卡圣地
+                    📍 翡翠长廊 (90分钟) - 竹海精华路段
                     
                     💡 温馨提示：
                     - 建议穿着舒适的运动鞋
                     - 携带防晒用品和水
                     - 景区较大，建议购买观光车票
                     """;
-        } else if (duration.contains("半天") || duration.contains("4小时") || duration.contains("上午") || duration.contains("下午")) {
+        } else if (duration != null && (duration.contains("半天") || duration.contains("4小时") || 
+                  duration.contains("上午") || duration.contains("下午"))) {
             return """
                     为您推荐半日游精华路线：
                     
-                    📍 忘忧谷 (2小时) - 必游景点
-                    📍 七彩飞瀑 (1小时) - 拍照打卡
-                    📍 翡翠长廊 (1小时) - 漫步竹林
+                    📍 忘忧谷 (120分钟) - 必游景点，竹林幽静
+                    📍 七彩飞瀑 (60分钟) - 拍照打卡
+                    📍 翡翠长廊 (60分钟) - 漫步竹林
                     
                     💡 温馨提示：
                     - 提前购买门票可节省排队时间
@@ -272,7 +409,7 @@ public class AiToolService {
                     🔸 经典一日游（8小时）：全部核心景点深度游
                     🔸 休闲两日游：慢节奏体验竹海生活，品尝特色美食
                     
-                    请告诉我您计划的游玩时长，我将为您制定详细路线！
+                    请告诉我您计划的游玩时长，以及是否有老人、小孩同行，我将为您制定更详细的路线！
                     """;
         }
     }

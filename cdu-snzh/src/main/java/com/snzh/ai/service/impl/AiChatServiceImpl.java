@@ -189,6 +189,27 @@ public class AiChatServiceImpl implements IAiChatService {
             return null;
         }
     }
+    
+    /**
+     * 安全地从参数Map中获取Boolean值
+     * 
+     * @param arguments 参数Map
+     * @param keys 可能的参数名（按优先级排序）
+     * @return Boolean值，如果不存在返回null
+     */
+    private Boolean getArgumentAsBoolean(Map<String, Object> arguments, String... keys) {
+        for (String key : keys) {
+            Object value = arguments.get(key);
+            if (value != null) {
+                if (value instanceof Boolean) {
+                    return (Boolean) value;
+                }
+                String strValue = value.toString().toLowerCase();
+                return "true".equals(strValue) || "1".equals(strValue) || "yes".equals(strValue);
+            }
+        }
+        return null;
+    }
 
     /**
      * 执行工具调用
@@ -233,12 +254,22 @@ public class AiChatServiceImpl implements IAiChatService {
                 }
                 
                 case "recommendRoute" -> {
-                    // 推荐游玩路线：需要游玩时长
+                    // 推荐游玩路线：支持多个可选参数
                     String duration = getArgumentAsString(arguments, "duration", "arg0");
                     if (duration == null) {
                         yield "参数错误：缺少游玩时长（duration）";
                     }
-                    yield aiToolService.recommendRoute(duration);
+                    
+                    // 可选参数
+                    String visitDate = getArgumentAsString(arguments, "visitDate", "arg1");
+                    Boolean hasChildren = getArgumentAsBoolean(arguments, "hasChildren", "arg2");
+                    Boolean hasElderly = getArgumentAsBoolean(arguments, "hasElderly", "arg3");
+                    Boolean hiking = getArgumentAsBoolean(arguments, "hiking", "arg4");
+                    Boolean photography = getArgumentAsBoolean(arguments, "photography", "arg5");
+                    Boolean leisure = getArgumentAsBoolean(arguments, "leisure", "arg6");
+                    
+                    yield aiToolService.recommendRoute(duration, visitDate, hasChildren, hasElderly, 
+                                                      hiking, photography, leisure);
                 }
                 
                 case "createOrder" -> {
