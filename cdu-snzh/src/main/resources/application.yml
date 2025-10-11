@@ -99,8 +99,8 @@ snzh:
       width: 400
       zoom: 14
   jwt:
-    access-token-expire: 3600
-    refresh-token-expire: 604800
+    access-token-expire: 3600000
+    refresh-token-expire: 604800000
     secret: ${JWT_SECRET:default-jwt-secret-key}
 
 # AI智能客服配置
