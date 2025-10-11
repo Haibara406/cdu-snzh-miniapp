@@ -1,6 +1,7 @@
-package com.snzh.init;
+package com.snzh.init.controller;
 
 import com.snzh.domain.ResponseResult;
+import com.snzh.init.service.IInitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

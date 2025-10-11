@@ -1,4 +1,4 @@
-package com.snzh.init;
+package com.snzh.init.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,6 +13,7 @@ import com.snzh.domain.vo.ScenicTicketVO;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.SpotTypeEnum;
 import com.snzh.enums.StatusEnum;
+import com.snzh.init.service.IInitService;
 import com.snzh.mapper.FacilityMapper;
 import com.snzh.mapper.FacilityTypeMapper;
 import com.snzh.mapper.ScenicSpotMapper;

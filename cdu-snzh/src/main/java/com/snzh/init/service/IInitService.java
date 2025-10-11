@@ -1,4 +1,4 @@
-package com.snzh.init;
+package com.snzh.init.service;
 
 import java.util.Map;
 
