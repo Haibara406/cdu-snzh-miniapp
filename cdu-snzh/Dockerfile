@@ -32,14 +32,6 @@ WORKDIR /app
 # 从构建阶段复制jar包
 COPY --from=builder /app/target/*.jar app.jar
 
-# 创建非root用户运行应用（安全最佳实践）
-RUN groupadd -g 1000 appuser && \
-    useradd -r -u 1000 -g appuser appuser && \
-    chown -R appuser:appuser /app
-
-# 切换到非root用户
-USER appuser
-
 # 暴露端口
 EXPOSE 8062
 
