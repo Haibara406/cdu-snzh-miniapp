@@ -11,6 +11,8 @@ import com.snzh.domain.vo.ForecastWeatherVO;
 import com.snzh.domain.vo.LiveWeatherVO;
 import com.snzh.domain.vo.ScenicSpotVO;
 import com.snzh.domain.vo.ScenicTicketVO;
+import com.snzh.domain.vo.FacilityVO;
+import com.snzh.service.IFacilityService;
 import com.snzh.service.IOrderService;
 import com.snzh.service.IScenicSpotService;
 import com.snzh.service.IScenicTicketService;
@@ -40,6 +42,7 @@ public class AiToolService {
     private final IScenicTicketService scenicTicketService;
     private final IOrderService orderService;
     private final RouteRecommendService routeRecommendService;
+    private final IFacilityService facilityService;
 
     /**
      * 查询当前实时天气
@@ -778,6 +781,138 @@ public class AiToolService {
             log.error("AI工具调用失败：创建订单", e);
             return "订单创建失败：" + e.getMessage() + "。请稍后重试或联系人工客服。";
         }
+    }
+    
+    /**
+     * 查询景区设施信息 - 新增工具
+     */
+    @Tool("🏗️ 查询景区内各种设施的位置和信息，如卫生间、停车场、餐厅、充电桩等。" +
+         "\n\n✅【适用场景】：" +
+         "\n- 用户询问'卫生间在哪里'、'哪里有停车场'、'充电桩位置'等单独设施查询" +
+         "\n- 用户需要特定类型设施的详细信息" +
+         "\n- 补充路线规划中未涵盖的设施查询" +
+         "\n\n📍【设施类型说明】：" +
+         "\n- 卫生间/厕所：toilet" +
+         "\n- 停车场：parking" +  
+         "\n- 餐厅/餐饮：restaurant" +
+         "\n- 住宿/酒店：accommodation" +
+         "\n- 充电桩：charging" +
+         "\n- 游客中心：visitor_center" +
+         "\n- 医务室：medical" +
+         "\n- 售票处：ticket_office" +
+         "\n- 出入口：entrance" +
+         "\n- 乘车点：bus_stop" +
+         "\n- 服务点：service" +
+         "\n\n💡【使用建议】：" +
+         "\n- 如果用户是在询问路线规划，优先使用recommendRoute工具（包含完整的设施推荐）" +
+         "\n- 本工具适合单独的设施查询需求" +
+         "\n- 查询结果会按距离排序，最近的在前面")
+    public String queryFacilities(String facilityType) {
+        try {
+            // 设施类型映射
+            Long typeId = mapFacilityType(facilityType);
+            if (typeId == null) {
+                return "抱歉，不支持查询此类设施。支持的设施类型包括：卫生间、停车场、餐厅、住宿、充电桩、游客中心、医务室、售票处、出入口、乘车点、服务点等。";
+            }
+            
+            // 查询设施信息
+            List<FacilityVO> facilities = facilityService.getFacilitiesByType(typeId);
+            
+            if (facilities == null || facilities.isEmpty()) {
+                return String.format("抱歉，暂未找到%s的相关信息。您可以咨询现场工作人员或拨打景区客服电话获取帮助。", getFacilityTypeName(typeId));
+            }
+            
+            // 格式化输出
+            StringBuilder sb = new StringBuilder();
+            sb.append("📍 ").append(getFacilityTypeName(typeId)).append("信息：\n\n");
+            
+            int count = 1;
+            for (FacilityVO facility : facilities) {
+                sb.append(count++).append(". **").append(facility.getName()).append("**\n");
+                
+                if (facility.getAddress() != null && !facility.getAddress().trim().isEmpty()) {
+                    sb.append("   📍 位置：").append(facility.getAddress()).append("\n");
+                }
+                
+                if (facility.getContactPhone() != null && !facility.getContactPhone().trim().isEmpty()) {
+                    sb.append("   📞 电话：").append(facility.getContactPhone()).append("\n");
+                }
+                
+                if (facility.getOpenTime() != null && !facility.getOpenTime().trim().isEmpty()) {
+                    sb.append("   🕐 开放时间：").append(facility.getOpenTime()).append("\n");
+                }
+                
+                sb.append("\n");
+            }
+            
+            // 添加贴心提示
+            sb.append("💡 **贴心提示**：\n");
+            if (typeId.equals(2L)) { // 停车场
+                sb.append("- 建议您记住停车位置，方便离开时找车\n");
+                sb.append("- 如需充电，请尝试询问是否有充电桩设施\n");
+            } else if (typeId.equals(1L)) { // 卫生间
+                sb.append("- 景区面积较大，建议提前规划，及时使用\n");
+                sb.append("- 部分卫生间可能因维护暂时关闭，可寻找就近替代\n");
+            } else if (typeId.equals(14L)) { // 充电桩
+                sb.append("- 请提前准备好充电卡或确认支付方式\n");
+                sb.append("- 充电时间建议不少于30分钟以确保充足电量\n");
+            }
+            
+            return sb.toString();
+            
+        } catch (Exception e) {
+            log.error("设施查询失败", e);
+            return "设施查询失败，请稍后重试或联系人工客服。";
+        }
+    }
+    
+    /**
+     * 设施类型映射
+     */
+    private Long mapFacilityType(String facilityType) {
+        if (facilityType == null) {
+            return null;
+        }
+        
+        String type = facilityType.toLowerCase().trim();
+        return switch (type) {
+            case "toilet", "卫生间", "厕所", "洗手间" -> 1L;
+            case "parking", "停车场", "停车位", "车位" -> 2L;
+            case "restaurant", "餐厅", "餐饮", "吃饭", "用餐" -> 3L;
+            case "shopping", "商场", "购物" -> 4L;
+            case "visitor_center", "游客中心", "咨询中心" -> 5L;
+            case "medical", "医务室", "医疗", "急救" -> 6L;
+            case "accommodation", "住宿", "酒店", "宾馆" -> 7L;
+            case "cable_car", "缆车", "乘缆点" -> 8L;
+            case "ticket_office", "售票处", "买票" -> 9L;
+            case "entrance", "出入口", "入口", "出口" -> 10L;
+            case "bus_stop", "乘车点", "班车", "巴士" -> 12L;
+            case "service", "服务点", "服务" -> 13L;
+            case "charging", "充电桩", "充电", "电桩" -> 14L;
+            default -> null;
+        };
+    }
+    
+    /**
+     * 获取设施类型名称
+     */
+    private String getFacilityTypeName(Long typeId) {
+        return switch (typeId.intValue()) {
+            case 1 -> "卫生间";
+            case 2 -> "停车场";
+            case 3 -> "餐厅";
+            case 4 -> "商场";
+            case 5 -> "游客中心";
+            case 6 -> "医务室";
+            case 7 -> "住宿";
+            case 8 -> "乘缆点";
+            case 9 -> "售票处";
+            case 10 -> "出入口";
+            case 12 -> "乘车点";
+            case 13 -> "服务点";
+            case 14 -> "充电桩";
+            default -> "设施";
+        };
     }
 }
 

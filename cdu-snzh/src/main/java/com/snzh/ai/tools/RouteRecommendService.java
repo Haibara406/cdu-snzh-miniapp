@@ -196,7 +196,7 @@ public class RouteRecommendService {
         switch (name) {
             case "忘忧谷":
                 info.setDifficulty(2);
-                info.setRecommendTime(120);
+                info.setRecommendTime(90);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(false); // 有台阶
                 info.setSuitableForPhotography(true);
@@ -223,7 +223,7 @@ public class RouteRecommendService {
                 break;
             case "翡翠长廊":
                 info.setDifficulty(1);
-                info.setRecommendTime(90);
+                info.setRecommendTime(75);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
@@ -232,7 +232,7 @@ public class RouteRecommendService {
                 break;
             case "天皇寺":
                 info.setDifficulty(2);
-                info.setRecommendTime(60);
+                info.setRecommendTime(40);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
@@ -250,7 +250,7 @@ public class RouteRecommendService {
                 break;
             case "仙寓洞":
                 info.setDifficulty(2);
-                info.setRecommendTime(60);
+                info.setRecommendTime(90);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
@@ -286,7 +286,7 @@ public class RouteRecommendService {
                 break;
             case "花溪十三桥":
                 info.setDifficulty(1);
-                info.setRecommendTime(90);
+                info.setRecommendTime(60);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
@@ -295,7 +295,7 @@ public class RouteRecommendService {
                 break;
             case "竹尖漫步":
                 info.setDifficulty(2);
-                info.setRecommendTime(60);
+                info.setRecommendTime(75);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
@@ -304,7 +304,7 @@ public class RouteRecommendService {
                 break;
             case "蜀南竹海博物馆":
                 info.setDifficulty(1);
-                info.setRecommendTime(90);
+                info.setRecommendTime(75);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(false);
@@ -331,7 +331,7 @@ public class RouteRecommendService {
                 break;
             case "观海楼":
                 info.setDifficulty(2);
-                info.setRecommendTime(60);
+                info.setRecommendTime(40);
                 info.setSuitableForChildren(true);
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
