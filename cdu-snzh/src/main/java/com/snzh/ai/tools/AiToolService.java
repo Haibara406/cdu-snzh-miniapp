@@ -438,7 +438,7 @@ public class AiToolService {
             for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
                 sb.append("  ").append(count++).append(". ").append(restaurant.getName());
                 if (restaurant.getDistance() != null && !restaurant.getDistance().isEmpty()) {
-                    sb.append(" - 距离").append(restaurant.getDistance());
+                    sb.append(" - ").append(restaurant.getDistance());
                 }
                 if (restaurant.getReason() != null && !restaurant.getReason().isEmpty()) {
                     sb.append(" | ").append(restaurant.getReason());
@@ -476,7 +476,7 @@ public class AiToolService {
             for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
                 sb.append("  ").append(count++).append(". ").append(parking.getName());
                 if (parking.getDistance() != null && !parking.getDistance().isEmpty()) {
-                    sb.append(" - 距离").append(parking.getDistance());
+                    sb.append(" - ").append(parking.getDistance());
                 } else {
                     sb.append(" - 景区内停车场");
                 }
@@ -491,7 +491,7 @@ public class AiToolService {
             for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
                 sb.append("  ").append(count++).append(". ").append(charging.getName());
                 if (charging.getDistance() != null && !charging.getDistance().isEmpty()) {
-                    sb.append(" - 距离").append(charging.getDistance());
+                    sb.append(" - ").append(charging.getDistance());
                 } else {
                     sb.append(" - 景区内充电桩");
                 }

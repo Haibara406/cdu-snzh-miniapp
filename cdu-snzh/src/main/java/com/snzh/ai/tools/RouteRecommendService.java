@@ -647,6 +647,66 @@ public class RouteRecommendService {
     }
     
     /**
+     * 计算设施到最近景点的距离和景点信息
+     */
+    private NearestScenicResult findNearestScenic(FacilityVO facility, List<ScenicInfo> scenics) {
+        if (facility.getLongitude() == null || facility.getLatitude() == null) {
+            return new NearestScenicResult(Double.MAX_VALUE, "未知景点");
+        }
+        
+        try {
+            double facilityLon = Double.parseDouble(facility.getLongitude());
+            double facilityLat = Double.parseDouble(facility.getLatitude());
+            
+            double minDistance = Double.MAX_VALUE;
+            String nearestScenicName = "未知景点";
+            
+            for (ScenicInfo scenic : scenics) {
+                if (scenic.getLongitude() != null && scenic.getLatitude() != null) {
+                    double scenicLon = Double.parseDouble(scenic.getLongitude());
+                    double scenicLat = Double.parseDouble(scenic.getLatitude());
+                    
+                    // 使用Haversine公式计算距离
+                    double R = 6371; // 地球半径（千米）
+                    double dLat = Math.toRadians(scenicLat - facilityLat);
+                    double dLon = Math.toRadians(scenicLon - facilityLon);
+                    double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                              Math.cos(Math.toRadians(facilityLat)) * Math.cos(Math.toRadians(scenicLat)) *
+                              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    double distance = R * c;
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestScenicName = scenic.getName();
+                    }
+                }
+            }
+            
+            return new NearestScenicResult(minDistance, nearestScenicName);
+        } catch (Exception e) {
+            log.debug("计算设施距离失败：{}", e.getMessage());
+            return new NearestScenicResult(Double.MAX_VALUE, "未知景点");
+        }
+    }
+
+    /**
+     * 最近景点结果
+     */
+    private static class NearestScenicResult {
+        private final double distance;
+        private final String scenicName;
+        
+        public NearestScenicResult(double distance, String scenicName) {
+            this.distance = distance;
+            this.scenicName = scenicName;
+        }
+        
+        public double getDistance() { return distance; }
+        public String getScenicName() { return scenicName; }
+    }
+
+    /**
      * 计算设施到景点群的平均距离（用于排序）
      */
     private double calculateAverageDistance(FacilityVO facility, List<ScenicInfo> scenics) {
@@ -776,10 +836,11 @@ public class RouteRecommendService {
                             .map(parking -> {
                                 FacilityItem item = convertToFacilityItem(parking);
                                 item.setReason("距离景点近");
-                                // 计算距离并添加到描述中
-                                double distance = calculateAverageDistance(parking, scenics);
-                                if (distance < Double.MAX_VALUE) {
-                                    item.setDistance(String.format("约%.1f公里", distance));
+                                // 计算到最近景点的距离并明确说明
+                                NearestScenicResult nearestResult = findNearestScenic(parking, scenics);
+                                if (nearestResult.getDistance() < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("距离%s约%.1f公里", 
+                                        nearestResult.getScenicName(), nearestResult.getDistance()));
                                 }
                                 return item;
                             })
@@ -803,10 +864,11 @@ public class RouteRecommendService {
                             .map(charging -> {
                                 FacilityItem item = convertToFacilityItem(charging);
                                 item.setReason("距离景点近");
-                                // 计算距离并添加到描述中
-                                double distance = calculateAverageDistance(charging, scenics);
-                                if (distance < Double.MAX_VALUE) {
-                                    item.setDistance(String.format("约%.1f公里", distance));
+                                // 计算到最近景点的距离并明确说明
+                                NearestScenicResult nearestResult = findNearestScenic(charging, scenics);
+                                if (nearestResult.getDistance() < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("距离%s约%.1f公里", 
+                                        nearestResult.getScenicName(), nearestResult.getDistance()));
                                 }
                                 return item;
                             })
@@ -830,10 +892,11 @@ public class RouteRecommendService {
                             .map(facility -> {
                                 FacilityItem item = convertToFacilityItem(facility);
                                 item.setReason("距离景点近");
-                                // 计算距离并添加到描述中
-                                double distance = calculateAverageDistance(facility, scenics);
-                                if (distance < Double.MAX_VALUE) {
-                                    item.setDistance(String.format("约%.1f公里", distance));
+                                // 计算到最近景点的距离并明确说明
+                                NearestScenicResult nearestResult = findNearestScenic(facility, scenics);
+                                if (nearestResult.getDistance() < Double.MAX_VALUE) {
+                                    item.setDistance(String.format("距离%s约%.1f公里", 
+                                        nearestResult.getScenicName(), nearestResult.getDistance()));
                                 }
                                 return item;
                             })
@@ -910,10 +973,11 @@ public class RouteRecommendService {
                         .map(restaurant -> {
                             FacilityItem item = convertToFacilityItem(restaurant);
                             item.setReason("特色：竹笋宴、竹筒饭、腊肉");
-                            // 计算距离并添加到描述中
-                            double distance = calculateAverageDistance(restaurant, route);
-                            if (distance < Double.MAX_VALUE) {
-                                item.setDistance(String.format("约%.1f公里", distance));
+                            // 计算到最近景点的距离并明确说明
+                            NearestScenicResult nearestResult = findNearestScenic(restaurant, route);
+                            if (nearestResult.getDistance() < Double.MAX_VALUE) {
+                                item.setDistance(String.format("距离%s约%.1f公里", 
+                                    nearestResult.getScenicName(), nearestResult.getDistance()));
                             }
                             return item;
                         })

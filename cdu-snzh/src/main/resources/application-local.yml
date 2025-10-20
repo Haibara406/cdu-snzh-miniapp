@@ -6,9 +6,40 @@
 
 spring:
   datasource:
-    url: jdbc:mysql://8.156.75.132:3306/cdu_snzh?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://8.156.75.132:3306/cdu_snzh?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&autoReconnect=true&failOverReadOnly=false&maxReconnects=3&useSSL=false
     username: snzh
     password: Ww249260523..  # TODO: 使用环境变量替代
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      # 连接池配置
+      maximum-pool-size: 15                    # 最大连接数
+      minimum-idle: 5                          # 最小空闲连接数
+      
+      # 超时配置（针对远程连接优化）
+      connection-timeout: 30000                # 连接超时：30秒
+      idle-timeout: 300000                     # 空闲超时：5分钟
+      max-lifetime: 600000                     # 连接最大生命周期：10分钟（远程连接关键配置）
+      
+      # 连接验证（防止连接失效）
+      validation-timeout: 5000                 # 验证超时：5秒
+      test-while-idle: true                    # 空闲时验证连接
+      test-on-borrow: true                     # 借用时验证连接
+      
+      # MySQL连接测试
+      connection-test-query: SELECT 1
+      
+      # 连接属性优化
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
   data:
     redis:
       host: 8.156.75.132
