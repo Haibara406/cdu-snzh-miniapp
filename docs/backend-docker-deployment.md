@@ -23,12 +23,18 @@ cd cdu-snzh
 # 2. 构建Docker镜像
 docker build -t cdu-snzh:latest .
 
-# 3. 运行容器
-docker run -d \
-  --name cdu-snzh-backend \
-  --restart always \
-  -p 8062:8062 \
-  cdu-snzh:latest
+# 3. 打包镜像文件
+docker save cdu-snzh:latest -o cdu-snzh.tar
+
+# 4. 发送镜像文件（密码：ogajZGLZ3842）
+scp cdu-snzh.tar root@45.204.204.199:/root/
+
+# 5. 加载镜像压缩包
+docker load -i cdu-snzh.tar
+
+# . 运行容器
+docker run -d --name cdu-snzh-backend --restart always -p 8062:8062 cdu-snzh:latest
+
 
 # 4. 查看日志
 docker logs -f cdu-snzh-backend
