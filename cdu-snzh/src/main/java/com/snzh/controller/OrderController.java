@@ -43,10 +43,8 @@ public class OrderController {
 
     @PostMapping("/pay")
     @Operation(summary = "支付订单", description = "模拟支付订单，直接更新订单状态为已支付")
-    public ResponseResult<Void> payOrder(
-            @Parameter(description = "订单号", required = true)
-            @RequestParam String orderNo) {
-        orderService.payOrder(orderNo);
+    public ResponseResult<Void> payOrder(@Valid @RequestBody OrderPayDTO dto) {
+        orderService.payOrder(dto.getOrderNo());
         return ResponseResult.success();
     }
 

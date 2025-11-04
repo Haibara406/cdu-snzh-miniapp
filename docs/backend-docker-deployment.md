@@ -26,8 +26,8 @@ docker build -t cdu-snzh:latest .
 # 3. 打包镜像文件
 docker save cdu-snzh:latest -o cdu-snzh.tar
 
-# 4. 发送镜像文件（密码：ogajZGLZ3842）
-scp cdu-snzh.tar root@45.204.204.199:/root/
+# 4. 发送镜像文件（密码：Ma0sRbLypXa1）
+scp cdu-snzh.tar root@154.94.235.178:/root/
 
 # 5. 加载镜像压缩包
 docker load -i cdu-snzh.tar
