@@ -1,11 +1,11 @@
 package com.snzh.ai.tools;
 
+import com.snzh.ai.domain.route.*;
 import com.snzh.ai.enums.TravelStrategy;
 import com.snzh.domain.vo.FacilityVO;
 import com.snzh.domain.vo.ScenicSpotVO;
 import com.snzh.service.IFacilityService;
 import com.snzh.service.IScenicSpotService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Set;
 
 /**
  * @author haibara
@@ -48,114 +47,6 @@ public class RouteRecommendService {
         static final Long CHARGING = 14L;     // 充电桩
     }
 
-    /**
-     * 景点信息封装类
-     */
-    @Data
-    private static class ScenicInfo {
-        private Long id;
-        private String name;
-        private String description;
-        private String longitude;
-        private String latitude;
-        private int difficulty; // 难度等级：1-简单，2-中等，3-困难
-        private int recommendTime; // 建议游览时间（分钟）
-        private boolean suitableForChildren; // 是否适合儿童
-        private boolean suitableForElderly; // 是否适合老人
-        private boolean suitableForPhotography; // 是否适合摄影
-        private boolean rainyDayFriendly; // 是否适合雨天
-        private String[] tags; // 标签
-        private int priority; // 优先级（基于综合因素计算）
-        
-        // 新增字段
-        private double scenicRating; // 景点评分（0-5分）
-        private int congestionImpact; // 拥堵影响：1=空闲，2=适中，3=繁忙
-        private int weatherImpact; // 天气影响：1=低（晴雨皆宜），2=中，3=高（天气敏感）
-        private String distance; // 距离描述（用于显示）
-    }
-
-    /**
-     * 用户偏好信息
-     */
-    @Data
-    public static class UserPreference {
-        private int duration; // 游玩时长（小时）
-        private boolean hasChildren; // 是否有小孩
-        private boolean hasElderly; // 是否有老人
-        
-        // 以下字段已废弃，建议使用strategies字段代替
-        @Deprecated // 建议使用 TravelStrategy.HIKING_CHALLENGE
-        private boolean hiking; // 是否徒步（已废弃，请使用strategies）
-        @Deprecated // 建议使用 TravelStrategy.PHOTOGRAPHY
-        private boolean photography; // 是否摄影（已废弃，请使用strategies）
-        @Deprecated // 建议使用 TravelStrategy.LEISURE_WALK
-        private boolean leisure; // 是否休闲游（已废弃，请使用strategies）
-        @Deprecated // 建议使用 TravelStrategy.NATURE_ECOLOGY 或 CULTURE_HISTORY
-        private boolean bambooCulture; // 是否喜欢竹文化（已废弃，请使用strategies）
-        
-        private LocalDate visitDate; // 游玩日期
-        private String weatherCondition; // 天气状况
-        private int temperature; // 温度
-        private String weatherDesc; // 天气描述
-        private boolean selfDriving; // 是否自驾游
-        private boolean hasElectricVehicle; // 是否电动车
-        
-        // 新增：游玩策略（推荐使用）
-        private Set<TravelStrategy> strategies; // 游玩策略集合，支持多策略组合
-    }
-
-    /**
-     * 路线推荐结果
-     */
-    @Data
-    public static class RouteRecommendation {
-        private String title;
-        private String weatherInfo;
-        private List<RouteSegment> segments;
-        private String tips;
-        private String summary;
-    }
-
-    @Data
-    public static class RouteSegment {
-        private String timeRange;
-        private String period;
-        private List<ScenicItem> scenics;
-        private String description;
-        private FacilityRecommendation facilityRecommendation; // 基础设施推荐
-    }
-
-    @Data
-    public static class ScenicItem {
-        private String name;
-        private int duration;
-        private String reason;
-        private String tips;
-    }
-    
-    /**
-     * 基础设施推荐
-     */
-    @Data
-    public static class FacilityRecommendation {
-        private List<FacilityItem> restaurants;      // 推荐餐厅
-        private List<FacilityItem> accommodations;   // 推荐住宿
-        private List<FacilityItem> toilets;          // 附近卫生间
-        private List<FacilityItem> parkings;         // 停车场
-        private List<FacilityItem> chargingStations; // 充电桩
-        private List<FacilityItem> services;         // 其他服务设施
-        private String tips;                         // 设施相关提示
-    }
-    
-    @Data
-    public static class FacilityItem {
-        private String name;
-        private String address;
-        private String openTime;
-        private String contactPhone;
-        private String distance;      // 距离描述
-        private String reason;        // 推荐理由
-    }
 
     /**
      * 智能推荐路线（增强版）

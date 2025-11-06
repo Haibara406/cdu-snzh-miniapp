@@ -262,15 +262,16 @@ public class AiChatServiceImpl implements IAiChatService {
                     
                     // 可选参数
                     String visitDate = getArgumentAsString(arguments, "visitDate", "arg1");
-                    Boolean hasChildren = getArgumentAsBoolean(arguments, "hasChildren", "arg2");
-                    Boolean hasElderly = getArgumentAsBoolean(arguments, "hasElderly", "arg3");
-                    Boolean hiking = getArgumentAsBoolean(arguments, "hiking", "arg4");
-                    Boolean photography = getArgumentAsBoolean(arguments, "photography", "arg5");
-                    Boolean leisure = getArgumentAsBoolean(arguments, "leisure", "arg6");
-                    Boolean selfDriving = getArgumentAsBoolean(arguments, "selfDriving", "arg7");
-                    Boolean hasElectricVehicle = getArgumentAsBoolean(arguments, "hasElectricVehicle", "arg8");
+                    String strategies = getArgumentAsString(arguments, "strategies", "arg2");
+                    Boolean hasChildren = getArgumentAsBoolean(arguments, "hasChildren", "arg3");
+                    Boolean hasElderly = getArgumentAsBoolean(arguments, "hasElderly", "arg4");
+                    Boolean hiking = getArgumentAsBoolean(arguments, "hiking", "arg5");
+                    Boolean photography = getArgumentAsBoolean(arguments, "photography", "arg6");
+                    Boolean leisure = getArgumentAsBoolean(arguments, "leisure", "arg7");
+                    Boolean selfDriving = getArgumentAsBoolean(arguments, "selfDriving", "arg8");
+                    Boolean hasElectricVehicle = getArgumentAsBoolean(arguments, "hasElectricVehicle", "arg9");
                     
-                    yield aiToolService.recommendRoute(duration, visitDate, hasChildren, hasElderly, 
+                    yield aiToolService.recommendRoute(duration, visitDate, strategies, hasChildren, hasElderly, 
                                                       hiking, photography, leisure, selfDriving, hasElectricVehicle);
                 }
                 

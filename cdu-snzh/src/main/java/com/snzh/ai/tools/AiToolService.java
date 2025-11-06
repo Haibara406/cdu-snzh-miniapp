@@ -1,9 +1,6 @@
 package com.snzh.ai.tools;
 
-import com.snzh.ai.tools.RouteRecommendService.RouteRecommendation;
-import com.snzh.ai.tools.RouteRecommendService.RouteSegment;
-import com.snzh.ai.tools.RouteRecommendService.ScenicItem;
-import com.snzh.ai.tools.RouteRecommendService.UserPreference;
+import com.snzh.ai.domain.route.*;
 import com.snzh.ai.enums.TravelStrategy;
 import com.snzh.domain.dto.OrderCreateDTO;
 import com.snzh.domain.dto.OrderItemDTO;
@@ -477,14 +474,14 @@ public class AiToolService {
     /**
      * 格式化基础设施推荐（简化版 - 包含距离信息）
      */
-    private String formatFacilityRecommendationSimple(RouteRecommendService.FacilityRecommendation facility) {
+    private String formatFacilityRecommendationSimple(FacilityRecommendation facility) {
         StringBuilder sb = new StringBuilder();
         
         // 餐厅推荐（优先显示，必须显示）
         if (facility.getRestaurants() != null && !facility.getRestaurants().isEmpty()) {
             sb.append("🍽️ 餐厅推荐（按距离排序，离景点最近）：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
+            for (FacilityItem restaurant : facility.getRestaurants()) {
                 sb.append("  ").append(count++).append(". ").append(restaurant.getName());
                 if (restaurant.getDistance() != null && !restaurant.getDistance().isEmpty()) {
                     sb.append(" - ").append(restaurant.getDistance());
@@ -504,7 +501,7 @@ public class AiToolService {
         if (facility.getAccommodations() != null && !facility.getAccommodations().isEmpty()) {
             sb.append("🏨 住宿推荐（按距离排序，离景点最近）：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem accommodation : facility.getAccommodations()) {
+            for (FacilityItem accommodation : facility.getAccommodations()) {
                 sb.append("  ").append(count++).append(". ").append(accommodation.getName());
                 if (accommodation.getDistance() != null && !accommodation.getDistance().isEmpty()) {
                     sb.append(" - 距离").append(accommodation.getDistance());
@@ -522,7 +519,7 @@ public class AiToolService {
         if (facility.getParkings() != null && !facility.getParkings().isEmpty()) {
             sb.append("🅿️ 停车场推荐（按距离排序，离景点最近）：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
+            for (FacilityItem parking : facility.getParkings()) {
                 sb.append("  ").append(count++).append(". ").append(parking.getName());
                 if (parking.getDistance() != null && !parking.getDistance().isEmpty()) {
                     sb.append(" - ").append(parking.getDistance());
@@ -537,7 +534,7 @@ public class AiToolService {
         if (facility.getChargingStations() != null && !facility.getChargingStations().isEmpty()) {
             sb.append("🔌 充电桩推荐（按距离排序，离景点最近）：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
+            for (FacilityItem charging : facility.getChargingStations()) {
                 sb.append("  ").append(count++).append(". ").append(charging.getName());
                 if (charging.getDistance() != null && !charging.getDistance().isEmpty()) {
                     sb.append(" - ").append(charging.getDistance());
@@ -552,7 +549,7 @@ public class AiToolService {
         if (facility.getToilets() != null && !facility.getToilets().isEmpty()) {
             sb.append("🚻 附近卫生间：");
             sb.append(facility.getToilets().stream()
-                    .map(RouteRecommendService.FacilityItem::getName)
+                    .map(FacilityItem::getName)
                     .limit(3)
                     .reduce((a, b) -> a + "、" + b)
                     .orElse(""));
@@ -563,7 +560,7 @@ public class AiToolService {
         if (facility.getServices() != null && !facility.getServices().isEmpty()) {
             sb.append("ℹ️ 服务设施：");
             sb.append(facility.getServices().stream()
-                    .map(RouteRecommendService.FacilityItem::getName)
+                    .map(FacilityItem::getName)
                     .limit(3)
                     .reduce((a, b) -> a + "、" + b)
                     .orElse(""));
@@ -577,14 +574,14 @@ public class AiToolService {
      * 格式化基础设施推荐（详细版 - 已弃用，保留用于兼容）
      */
     @Deprecated
-    private String formatFacilityRecommendation(RouteRecommendService.FacilityRecommendation facility) {
+    private String formatFacilityRecommendation(FacilityRecommendation facility) {
         StringBuilder sb = new StringBuilder();
         
         // 餐厅推荐
         if (facility.getRestaurants() != null && !facility.getRestaurants().isEmpty()) {
             sb.append("\n🍽️ 推荐餐厅：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem restaurant : facility.getRestaurants()) {
+            for (FacilityItem restaurant : facility.getRestaurants()) {
                 sb.append("  ").append(count++).append(". ").append(restaurant.getName());
                 if (restaurant.getReason() != null) {
                     sb.append(" - ").append(restaurant.getReason());
@@ -603,7 +600,7 @@ public class AiToolService {
         if (facility.getAccommodations() != null && !facility.getAccommodations().isEmpty()) {
             sb.append("\n🏨 推荐住宿：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem accommodation : facility.getAccommodations()) {
+            for (FacilityItem accommodation : facility.getAccommodations()) {
                 sb.append("  ").append(count++).append(". ").append(accommodation.getName());
                 sb.append("\n");
                 if (accommodation.getAddress() != null) {
@@ -619,7 +616,7 @@ public class AiToolService {
         if (facility.getParkings() != null && !facility.getParkings().isEmpty()) {
             sb.append("\n🅿️ 停车场：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem parking : facility.getParkings()) {
+            for (FacilityItem parking : facility.getParkings()) {
                 sb.append("  ").append(count++).append(". ").append(parking.getName());
                 if (parking.getReason() != null) {
                     sb.append(" - ").append(parking.getReason());
@@ -638,7 +635,7 @@ public class AiToolService {
         if (facility.getChargingStations() != null && !facility.getChargingStations().isEmpty()) {
             sb.append("\n🔌 充电桩：\n");
             int count = 1;
-            for (RouteRecommendService.FacilityItem charging : facility.getChargingStations()) {
+            for (FacilityItem charging : facility.getChargingStations()) {
                 sb.append("  ").append(count++).append(". ").append(charging.getName());
                 if (charging.getReason() != null) {
                     sb.append(" - ").append(charging.getReason());
@@ -656,7 +653,7 @@ public class AiToolService {
         // 卫生间位置
         if (facility.getToilets() != null && !facility.getToilets().isEmpty()) {
             sb.append("\n🚻 附近卫生间：\n");
-            for (RouteRecommendService.FacilityItem toilet : facility.getToilets()) {
+            for (FacilityItem toilet : facility.getToilets()) {
                 sb.append("  · ").append(toilet.getName());
                 if (toilet.getAddress() != null) {
                     sb.append(" (").append(toilet.getAddress()).append(")");
@@ -668,7 +665,7 @@ public class AiToolService {
         // 其他服务设施
         if (facility.getServices() != null && !facility.getServices().isEmpty()) {
             sb.append("\n🏥 服务设施：\n");
-            for (RouteRecommendService.FacilityItem service : facility.getServices()) {
+            for (FacilityItem service : facility.getServices()) {
                 sb.append("  · ").append(service.getName());
                 if (service.getReason() != null) {
                     sb.append(" - ").append(service.getReason());
