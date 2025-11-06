@@ -4,6 +4,7 @@ import com.snzh.ai.tools.RouteRecommendService.RouteRecommendation;
 import com.snzh.ai.tools.RouteRecommendService.RouteSegment;
 import com.snzh.ai.tools.RouteRecommendService.ScenicItem;
 import com.snzh.ai.tools.RouteRecommendService.UserPreference;
+import com.snzh.ai.enums.TravelStrategy;
 import com.snzh.domain.dto.OrderCreateDTO;
 import com.snzh.domain.dto.OrderItemDTO;
 import com.snzh.domain.vo.CastVO;
@@ -26,6 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * @author haibara
@@ -244,41 +247,56 @@ public class AiToolService {
      * 推荐游玩路线（智能版）- 路线规划的首选工具
      * 综合考虑天气、用户偏好、景点距离等因素
      */
-    @Tool("🌟【路线规划首选工具】根据用户的游玩时长、游玩场景和天气情况智能推荐最合适的游玩路线和行程安排。" +
+    @Tool("🌟【路线规划首选工具】根据用户的游玩时长、游玩策略偏好和天气情况智能推荐最合适的游玩路线和行程安排。" +
          "\n\n✅【优先使用此工具的场景】：" +
          "\n- 用户询问'怎么玩'、'路线推荐'、'行程安排'" +
          "\n- 用户提到游玩时间（半天、一天、两天等）" +
          "\n- 用户描述了偏好（摄影、休闲、有老人小孩等）" +
+         "\n- 用户明确提到游玩策略（如：亲子出游、徒步挑战等）" +
          "\n- 用户是自驾游客" +
          "\n\n💡【此工具的强大之处】：" +
          "\n- 一次性返回完整方案：景点+设施+天气+建议" +
          "\n- 自动按距离推荐餐厅、住宿、停车场、充电桩" +
+         "\n- 支持十种游玩策略精准匹配" +
          "\n- 无需再逐个查询景点详情" +
+         "\n\n【游玩策略智能识别】：" +
+         "\n- 如果用户提到'老人'或'小孩' → 自动识别为【亲子出游】策略" +
+         "\n- 如果用户提到'摄影'、'拍照' → 自动识别为【摄影爱好】策略" +
+         "\n- 如果用户提到'轻松'、'休闲' → 自动识别为【休闲散步】策略" +
+         "\n- 如果用户提到'徒步'、'登山' → 自动识别为【徒步挑战】策略" +
+         "\n- 如果用户提到'博物馆'、'寺庙'、'文化' → 自动识别为【文化历史】策略" +
+         "\n- 如果用户提到'冒险'、'刺激' → 自动识别为【探索冒险】策略" +
+         "\n- 支持多策略组合（如：亲子+摄影）" +
          "\n\n【重要提示】此工具返回的是基础推荐数据，你需要基于用户的具体描述进行深度分析和个性化解读，不要机械地复述工具输出！" +
          "\n\n参数说明：" +
          "- duration: 游玩时长（必填，String类型，例如：'一天'、'半天'、'4小时'、'两天'等）" +
          "- visitDate: 游玩日期（可选，String类型，格式：yyyy-MM-dd，用于查询天气）" +
+         "- strategies: 游玩策略列表（可选，String类型，多个策略用逗号分隔，如：'亲子出游,摄影爱好'）" +
+         "  可选策略：徒步挑战、摄影爱好、休闲散步、自然生态、亲子出游、打卡浏览、文化历史、养生静心、探索冒险、文创体验" +
          "- hasChildren: 是否有小孩（可选，Boolean类型，默认false）- 根据用户话语判断" +
          "- hasElderly: 是否有老人（可选，Boolean类型，默认false）- 根据用户话语判断" +
-         "- hiking: 是否徒步（可选，Boolean类型，默认false）- 用户提到徒步、登山、运动等" +
-         "- photography: 是否摄影（可选，Boolean类型，默认false）- 用户提到摄影、拍照等" +
-         "- leisure: 是否休闲游（可选，Boolean类型，默认false）- 用户强调轻松、休闲" +
+         "- hiking: 是否徒步（可选，Boolean类型，默认false）- 用户提到徒步、登山、运动等（兼容旧参数）" +
+         "- photography: 是否摄影（可选，Boolean类型，默认false）- 用户提到摄影、拍照等（兼容旧参数）" +
+         "- leisure: 是否休闲游（可选，Boolean类型，默认false）- 用户强调轻松、休闲（兼容旧参数）" +
          "- selfDriving: 是否自驾游（可选，Boolean类型，默认false）- 用户提到自驾、开车" +
          "- hasElectricVehicle: 是否电动车（可选，Boolean类型，默认false）- 用户提到电动车、新能源车" +
          "\n返回内容：工具会返回结构化的路线数据，包括天气、景点、设施等信息。" +
          "\n\n【你应该怎么做】：" +
-         "1. 在调用工具前，先从用户的话语中提取关键信息（老人/小孩/自驾/兴趣爱好等）" +
-         "2. 调用工具后，不要直接输出工具返回的内容" +
-         "3. 要基于用户的具体描述，用自己的语言解释推荐理由" +
-         "4. 给出针对性的建议，展现你对用户需求的理解" +
-         "5. 如用户提到老人，要特别说明为何选择这些轻松的景点" +
-         "6. 如用户提到摄影，要说明拍照的最佳时间和技巧" +
-         "7. 如用户自驾，要提醒停车和充电事项" +
+         "1. 在调用工具前，先从用户的话语中提取关键信息（老人/小孩/自驾/兴趣爱好/策略偏好等）" +
+         "2. 智能识别用户的游玩策略，填入strategies参数" +
+         "3. 调用工具后，不要直接输出工具返回的内容" +
+         "4. 要基于用户的具体描述，用自己的语言解释推荐理由" +
+         "5. 给出针对性的建议，展现你对用户需求的理解" +
+         "6. 如用户提到老人，要特别说明为何选择这些轻松的景点" +
+         "7. 如用户提到摄影，要说明拍照的最佳时间和技巧" +
+         "8. 如用户自驾，要提醒停车和充电事项" +
+         "9. 如用户选择了特定策略，要说明为何这些景点符合该策略特点" +
          "\n\n适用场景：用户询问如何安排行程、想要路线推荐、不知道怎么玩、时间有限需要精简路线、" +
-         "带老人/小孩出游、摄影爱好者、自驾游等各种场景。")
+         "带老人/小孩出游、摄影爱好者、自驾游、有特定游玩策略偏好等各种场景。")
     public String recommendRoute(
             String duration,
             String visitDate,
+            String strategies,
             Boolean hasChildren,
             Boolean hasElderly,
             Boolean hiking,
@@ -301,7 +319,38 @@ public class AiToolService {
             preference.setSelfDriving(selfDriving != null && selfDriving);
             preference.setHasElectricVehicle(hasElectricVehicle != null && hasElectricVehicle);
             
-            // 3. 获取天气信息
+            // 3. 解析和智能识别游玩策略
+            Set<TravelStrategy> strategySet = new HashSet<>();
+            
+            // 3.1 解析用户明确指定的策略
+            if (strategies != null && !strategies.trim().isEmpty()) {
+                String[] strategyNames = strategies.split("[,，]");
+                for (String name : strategyNames) {
+                    String trimmedName = name.trim();
+                    TravelStrategy strategy = TravelStrategy.fromName(trimmedName);
+                    if (strategy != null) {
+                        strategySet.add(strategy);
+                    }
+                }
+            }
+            
+            // 3.2 基于用户偏好自动识别策略（兼容旧参数）
+            if (hasChildren != null && hasChildren || hasElderly != null && hasElderly) {
+                strategySet.add(TravelStrategy.FAMILY_TRIP);
+            }
+            if (photography != null && photography) {
+                strategySet.add(TravelStrategy.PHOTOGRAPHY);
+            }
+            if (hiking != null && hiking) {
+                strategySet.add(TravelStrategy.HIKING_CHALLENGE);
+            }
+            if (leisure != null && leisure) {
+                strategySet.add(TravelStrategy.LEISURE_WALK);
+            }
+            
+            preference.setStrategies(strategySet);
+            
+            // 4. 获取天气信息
             try {
                 if (visitDate != null && !visitDate.isEmpty()) {
                     LocalDate date = LocalDate.parse(visitDate);
@@ -332,10 +381,10 @@ public class AiToolService {
                 log.warn("获取天气信息失败，使用默认配置", e);
             }
             
-            // 4. 调用智能推荐服务
+            // 5. 调用智能推荐服务
             RouteRecommendation recommendation = routeRecommendService.recommendRoute(preference);
             
-            // 5. 格式化输出
+            // 6. 格式化输出
             return formatRecommendation(recommendation);
             
         } catch (Exception e) {

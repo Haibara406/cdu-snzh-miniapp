@@ -1,5 +1,6 @@
 package com.snzh.ai.tools;
 
+import com.snzh.ai.enums.TravelStrategy;
 import com.snzh.domain.vo.FacilityVO;
 import com.snzh.domain.vo.ScenicSpotVO;
 import com.snzh.service.IFacilityService;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * @author haibara
@@ -64,6 +66,12 @@ public class RouteRecommendService {
         private boolean rainyDayFriendly; // 是否适合雨天
         private String[] tags; // 标签
         private int priority; // 优先级（基于综合因素计算）
+        
+        // 新增字段
+        private double scenicRating; // 景点评分（0-5分）
+        private int congestionImpact; // 拥堵影响：1=空闲，2=适中，3=繁忙
+        private int weatherImpact; // 天气影响：1=低（晴雨皆宜），2=中，3=高（天气敏感）
+        private String distance; // 距离描述（用于显示）
     }
 
     /**
@@ -74,16 +82,26 @@ public class RouteRecommendService {
         private int duration; // 游玩时长（小时）
         private boolean hasChildren; // 是否有小孩
         private boolean hasElderly; // 是否有老人
-        private boolean hiking; // 是否徒步
-        private boolean photography; // 是否摄影
-        private boolean leisure; // 是否休闲游
-        private boolean bambooCulture; // 是否喜欢竹文化（可扩展）
+        
+        // 以下字段已废弃，建议使用strategies字段代替
+        @Deprecated // 建议使用 TravelStrategy.HIKING_CHALLENGE
+        private boolean hiking; // 是否徒步（已废弃，请使用strategies）
+        @Deprecated // 建议使用 TravelStrategy.PHOTOGRAPHY
+        private boolean photography; // 是否摄影（已废弃，请使用strategies）
+        @Deprecated // 建议使用 TravelStrategy.LEISURE_WALK
+        private boolean leisure; // 是否休闲游（已废弃，请使用strategies）
+        @Deprecated // 建议使用 TravelStrategy.NATURE_ECOLOGY 或 CULTURE_HISTORY
+        private boolean bambooCulture; // 是否喜欢竹文化（已废弃，请使用strategies）
+        
         private LocalDate visitDate; // 游玩日期
         private String weatherCondition; // 天气状况
         private int temperature; // 温度
         private String weatherDesc; // 天气描述
         private boolean selfDriving; // 是否自驾游
         private boolean hasElectricVehicle; // 是否电动车
+        
+        // 新增：游玩策略（推荐使用）
+        private Set<TravelStrategy> strategies; // 游玩策略集合，支持多策略组合
     }
 
     /**
@@ -201,7 +219,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false); // 有台阶
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"竹林", "幽静", "瀑布", "溪流"});
+                info.setTags(new String[]{"竹林", "幽静", "瀑布", "溪流", "自然生态", "养生静心"});
+                info.setScenicRating(4.7);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(2); // 雨天路滑
                 break;
             case "天宝寨":
                 info.setDifficulty(3);
@@ -210,7 +231,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false); // 需要登高
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"登高", "古建筑", "全景"});
+                info.setTags(new String[]{"登高", "古建筑", "全景", "文化历史", "探索冒险"});
+                info.setScenicRating(4.5);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(3); // 雨天危险
                 break;
             case "七彩飞瀑":
                 info.setDifficulty(2);
@@ -219,7 +243,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"瀑布", "彩虹", "拍照"});
+                info.setTags(new String[]{"瀑布", "彩虹", "拍照", "打卡浏览", "摄影爱好"});
+                info.setScenicRating(4.8);
+                info.setCongestionImpact(3); // 繁忙（热门打卡点）
+                info.setWeatherImpact(2); // 雨天路滑
                 break;
             case "翡翠长廊":
                 info.setDifficulty(1);
@@ -228,7 +255,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"竹林", "步道", "电影取景地"});
+                info.setTags(new String[]{"竹林", "步道", "电影取景地", "休闲散步", "打卡浏览"});
+                info.setScenicRating(4.9);
+                info.setCongestionImpact(3); // 繁忙（标志景点）
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "天皇寺":
                 info.setDifficulty(2);
@@ -237,7 +267,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"寺庙", "禅意", "竹海"});
+                info.setTags(new String[]{"寺庙", "禅意", "竹海", "文化历史", "养生静心"});
+                info.setScenicRating(4.3);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "龙吟寺":
                 info.setDifficulty(2);
@@ -246,7 +279,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"寺庙", "观景台", "云海"});
+                info.setTags(new String[]{"寺庙", "观景台", "云海", "文化历史", "摄影爱好"});
+                info.setScenicRating(4.4);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "仙寓洞":
                 info.setDifficulty(2);
@@ -255,7 +291,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"洞穴", "道观", "历史"});
+                info.setTags(new String[]{"洞穴", "道观", "历史", "文化历史", "探索冒险"});
+                info.setScenicRating(4.4);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(2); // 雨天路滑
                 break;
             case "仙女湖":
                 info.setDifficulty(1);
@@ -264,7 +303,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"湖泊", "休闲", "浪漫"});
+                info.setTags(new String[]{"湖泊", "休闲", "浪漫", "休闲散步", "亲子出游"});
+                info.setScenicRating(4.6);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "青龙湖":
                 info.setDifficulty(1);
@@ -273,7 +315,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"湖泊", "游船", "休闲"});
+                info.setTags(new String[]{"湖泊", "游船", "休闲", "休闲散步", "亲子出游"});
+                info.setScenicRating(4.5);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "海中海":
                 info.setDifficulty(1);
@@ -282,7 +327,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"湖泊", "《卧虎藏龙》", "电影取景地"});
+                info.setTags(new String[]{"湖泊", "《卧虎藏龙》", "电影取景地", "打卡浏览", "休闲散步"});
+                info.setScenicRating(4.7);
+                info.setCongestionImpact(3); // 繁忙（电影取景地）
+                info.setWeatherImpact(1); // 晴雨皆宜
                 break;
             case "花溪十三桥":
                 info.setDifficulty(1);
@@ -291,7 +339,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"古桥", "溪流", "田园"});
+                info.setTags(new String[]{"古桥", "溪流", "田园", "文化历史", "自然生态"});
+                info.setScenicRating(4.3);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(2); // 雨天路滑
                 break;
             case "竹尖漫步":
                 info.setDifficulty(2);
@@ -300,7 +351,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"栈道", "竹林", "沉浸式"});
+                info.setTags(new String[]{"栈道", "竹林", "沉浸式", "徒步挑战", "摄影爱好"});
+                info.setScenicRating(4.6);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(3); // 雨天栈道湿滑危险
                 break;
             case "蜀南竹海博物馆":
                 info.setDifficulty(1);
@@ -309,7 +363,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(true);
                 info.setSuitableForPhotography(false);
                 info.setRainyDayFriendly(true);
-                info.setTags(new String[]{"博物馆", "竹文化", "室内", "雨天好选择"});
+                info.setTags(new String[]{"博物馆", "竹文化", "室内", "雨天好选择", "文化历史", "亲子出游"});
+                info.setScenicRating(4.4);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(1); // 室内不受影响
                 break;
             case "望龙坪":
                 info.setDifficulty(2);
@@ -318,7 +375,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"观景台", "远眺", "日出日落"});
+                info.setTags(new String[]{"观景台", "远眺", "日出日落", "摄影爱好", "探索冒险"});
+                info.setScenicRating(4.5);
+                info.setCongestionImpact(1); // 空闲（偏远）
+                info.setWeatherImpact(2); // 观景受天气影响
                 break;
             case "青云长廊":
                 info.setDifficulty(2);
@@ -327,7 +387,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"长廊", "田园", "观景"});
+                info.setTags(new String[]{"长廊", "田园", "观景", "摄影爱好", "探索冒险"});
+                info.setScenicRating(4.4);
+                info.setCongestionImpact(1); // 空闲（偏远）
+                info.setWeatherImpact(2); // 观景受天气影响
                 break;
             case "观海楼":
                 info.setDifficulty(2);
@@ -336,7 +399,10 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"古楼", "观景", "历史"});
+                info.setTags(new String[]{"古楼", "观景", "历史", "文化历史", "摄影爱好"});
+                info.setScenicRating(4.5);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(2); // 观景受天气影响
                 break;
             case "拜寿台":
                 info.setDifficulty(2);
@@ -345,7 +411,35 @@ public class RouteRecommendService {
                 info.setSuitableForElderly(false);
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(false);
-                info.setTags(new String[]{"观景台", "云海", "日出"});
+                info.setTags(new String[]{"观景台", "云海", "日出", "摄影爱好", "打卡浏览"});
+                info.setScenicRating(4.8);
+                info.setCongestionImpact(2); // 适中
+                info.setWeatherImpact(2); // 云海受天气影响
+                break;
+            case "永江休闲度假村" :
+            case "永江度假村" :
+                info.setDifficulty(1);
+                info.setRecommendTime(90);
+                info.setSuitableForChildren(true);
+                info.setSuitableForElderly(true);
+                info.setSuitableForPhotography(true);
+                info.setRainyDayFriendly(true);
+                info.setTags(new String[]{"度假村", "休闲", "田园", "文创", "亲子"});
+                info.setScenicRating(4.2);
+                info.setCongestionImpact(1); // 空闲
+                info.setWeatherImpact(1); // 晴雨皆宜
+                break;
+            case "墨溪" :
+                info.setDifficulty(1);
+                info.setRecommendTime(75);
+                info.setSuitableForChildren(true);
+                info.setSuitableForElderly(true);
+                info.setSuitableForPhotography(true);
+                info.setRainyDayFriendly(false);
+                info.setTags(new String[]{"溪流", "原始", "自然生态", "幽静", "探索"});
+                info.setScenicRating(4.0);
+                info.setCongestionImpact(1); // 空闲
+                info.setWeatherImpact(2); // 中等（溪流雨天不太适合）
                 break;
             default:
                 // 默认配置
@@ -356,55 +450,211 @@ public class RouteRecommendService {
                 info.setSuitableForPhotography(true);
                 info.setRainyDayFriendly(true);
                 info.setTags(new String[]{"景点"});
+                info.setScenicRating(4.0);
+                info.setCongestionImpact(2);
+                info.setWeatherImpact(1);
         }
     }
 
     /**
-     * 根据用户偏好筛选景点
+     * 根据用户偏好筛选景点（增强版：支持策略匹配）
      */
     private List<ScenicInfo> filterScenicsByPreference(List<ScenicInfo> scenics, UserPreference preference) {
         return scenics.stream()
                 .filter(scenic -> {
-                    // 如果有小孩，过滤不适合的景点
+                    // 硬过滤：如果有小孩，过滤不适合的景点
                     if (preference.isHasChildren() && !scenic.isSuitableForChildren()) {
                         return false;
                     }
-                    // 如果有老人，过滤不适合的景点
+                    // 硬过滤：如果有老人，过滤不适合的景点
                     if (preference.isHasElderly() && !scenic.isSuitableForElderly()) {
                         return false;
                     }
-                    // 如果是雨天，优先选择雨天友好的景点
-                    if (preference.getWeatherCondition() != null && 
-                        preference.getWeatherCondition().contains("雨") && 
-                        !scenic.isRainyDayFriendly()) {
-                        scenic.setPriority(scenic.getPriority() - 2);
-                    }
-                    // 如果是摄影爱好者，优先选择适合摄影的景点
-                    if (preference.isPhotography() && scenic.isSuitableForPhotography()) {
-                        scenic.setPriority(scenic.getPriority() + 2);
-                    }
-                    // 如果是徒步，适当增加难度
-                    if (preference.isHiking()) {
-                        scenic.setPriority(scenic.getPriority() + (scenic.getDifficulty() - 1));
-                    }
-                    // 如果是休闲游，优先选择简单的景点
-                    if (preference.isLeisure()) {
-                        scenic.setPriority(scenic.getPriority() + (3 - scenic.getDifficulty()));
-                    }
-                    // 如果喜欢竹文化，优先推荐相关景点
-                    if (preference.isBambooCulture() && scenic.getTags() != null) {
-                        for (String tag : scenic.getTags()) {
-                            if (tag.contains("竹") || tag.contains("博物馆") || tag.contains("文化")) {
-                                scenic.setPriority(scenic.getPriority() + 3);
-                                break;
-                            }
+                    return true;
+                })
+                .peek(scenic -> {
+                    // 基础评分：从景点评分开始
+                    int basePriority = (int) (scenic.getScenicRating() * 10);
+                    
+                    // 拥堵影响（拥堵越低越好）
+                    basePriority -= (scenic.getCongestionImpact() - 1) * 2;
+                    
+                    // 天气影响
+                    if (preference.getWeatherCondition() != null && preference.getWeatherCondition().contains("雨")) {
+                        if (scenic.isRainyDayFriendly()) {
+                            basePriority += 5; // 雨天友好景点加分
+                        } else if (scenic.getWeatherImpact() >= 3) {
+                            basePriority -= 10; // 天气敏感景点大幅扣分
+                        } else if (scenic.getWeatherImpact() >= 2) {
+                            basePriority -= 5; // 中等影响扣分
                         }
                     }
                     
-                    return true;
+                    // === 策略匹配加分 ===
+                    if (preference.getStrategies() != null && !preference.getStrategies().isEmpty()) {
+                        for (TravelStrategy strategy : preference.getStrategies()) {
+                            basePriority += calculateStrategyScore(scenic, strategy, preference);
+                        }
+                    } else {
+                        // 兼容旧有的偏好方式
+                        basePriority += calculateLegacyPreferenceScore(scenic, preference);
+                    }
+                    
+                    scenic.setPriority(basePriority);
                 })
                 .sorted((a, b) -> Integer.compare(b.getPriority(), a.getPriority()))
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * 计算策略匹配分数
+     */
+    private int calculateStrategyScore(ScenicInfo scenic, TravelStrategy strategy, UserPreference preference) {
+        if (scenic.getTags() == null || scenic.getTags().length == 0) {
+            return 0;
+        }
+        
+        int score = 0;
+        String[] tags = scenic.getTags();
+        
+        switch (strategy) {
+            case HIKING_CHALLENGE:
+                // 徒步挑战：难度高、距离长的景点
+                score += scenic.getDifficulty() >= 2 ? 5 : 0;
+                score += scenic.getRecommendTime() >= 75 ? 3 : 0;
+                if (containsAnyTag(tags, "徒步挑战", "栈道", "登高")) {
+                    score += 8;
+                }
+                break;
+                
+            case PHOTOGRAPHY:
+                // 摄影爱好：评分高、视野开阔
+                score += scenic.getScenicRating() >= 4.5 ? 8 : 0;
+                if (scenic.isSuitableForPhotography()) {
+                    score += 5;
+                }
+                if (containsAnyTag(tags, "摄影爱好", "观景", "全景", "彩虹", "日出", "云海")) {
+                    score += 8;
+                }
+                break;
+                
+            case LEISURE_WALK:
+                // 休闲散步：难度低、路况平缓
+                score += scenic.getDifficulty() == 1 ? 8 : 0;
+                score += scenic.getRecommendTime() <= 60 ? 3 : 0;
+                if (containsAnyTag(tags, "休闲散步", "休闲", "湖泊", "步道")) {
+                    score += 8;
+                }
+                break;
+                
+            case NATURE_ECOLOGY:
+                // 自然生态：原始生态景观
+                if (containsAnyTag(tags, "自然生态", "原始", "竹林", "溪流", "瀑布", "幽静")) {
+                    score += 10;
+                }
+                break;
+                
+            case FAMILY_TRIP:
+                // 亲子出游：设施完善、适合儿童
+                if (scenic.isSuitableForChildren() && scenic.isSuitableForElderly()) {
+                    score += 5;
+                }
+                score += scenic.getDifficulty() == 1 ? 5 : 0;
+                if (containsAnyTag(tags, "亲子出游", "亲子", "湖泊", "博物馆")) {
+                    score += 8;
+                }
+                break;
+                
+            case QUICK_TOUR:
+                // 打卡浏览：高评分、用时短
+                score += scenic.getScenicRating() >= 4.7 ? 8 : 0;
+                score += scenic.getRecommendTime() <= 60 ? 5 : 0;
+                if (containsAnyTag(tags, "打卡浏览", "电影取景地", "拍照")) {
+                    score += 10;
+                }
+                break;
+                
+            case CULTURE_HISTORY:
+                // 文化历史：博物馆、寺庙、古建筑
+                if (containsAnyTag(tags, "文化历史", "博物馆", "寺庙", "古建筑", "道观", "历史", "古桥")) {
+                    score += 10;
+                }
+                break;
+                
+            case WELLNESS:
+                // 养生静心：安静舒适、林荫地带
+                score += scenic.getCongestionImpact() == 1 ? 5 : 0; // 空闲景点加分
+                if (containsAnyTag(tags, "养生静心", "幽静", "禅意", "寺庙", "竹林")) {
+                    score += 10;
+                }
+                break;
+                
+            case ADVENTURE:
+                // 探索冒险：偏远、冷门、有特殊项目
+                score += scenic.getCongestionImpact() == 1 ? 8 : 0; // 偏远空闲
+                score += scenic.getDifficulty() >= 2 ? 5 : 0;
+                if (containsAnyTag(tags, "探索冒险", "探索", "洞穴", "登高", "原始")) {
+                    score += 10;
+                }
+                break;
+                
+            case CULTURAL_CREATIVE:
+                // 文创体验：有文创项目或产品
+                if (containsAnyTag(tags, "文创", "度假村", "博物馆")) {
+                    score += 10;
+                }
+                break;
+        }
+        
+        return score;
+    }
+    
+    /**
+     * 计算传统偏好分数（兼容旧系统）
+     */
+    private int calculateLegacyPreferenceScore(ScenicInfo scenic, UserPreference preference) {
+        int score = 0;
+        
+        // 摄影偏好
+        if (preference.isPhotography() && scenic.isSuitableForPhotography()) {
+            score += 5;
+        }
+        
+        // 徒步偏好
+        if (preference.isHiking()) {
+            score += (scenic.getDifficulty() - 1) * 3;
+        }
+        
+        // 休闲偏好
+        if (preference.isLeisure()) {
+            score += (3 - scenic.getDifficulty()) * 3;
+        }
+        
+        // 竹文化偏好
+        if (preference.isBambooCulture() && scenic.getTags() != null) {
+            for (String tag : scenic.getTags()) {
+                if (tag.contains("竹") || tag.contains("博物馆") || tag.contains("文化")) {
+                    score += 8;
+                    break;
+                }
+            }
+        }
+        
+        return score;
+    }
+    
+    /**
+     * 检查标签是否包含任意关键词
+     */
+    private boolean containsAnyTag(String[] tags, String... keywords) {
+        for (String tag : tags) {
+            for (String keyword : keywords) {
+                if (tag.contains(keyword)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
