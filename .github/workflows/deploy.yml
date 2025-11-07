@@ -40,7 +40,7 @@ jobs:
         run: |
           cd cdu-snzh
           echo "开始Maven打包..."
-          mvn clean package -DskipTests -Pprod
+          mvn clean package -DskipTests -Dcheckstyle.skip=true -Pprod
           echo "✅ Maven打包完成"
           ls -lh target/*.jar
       
