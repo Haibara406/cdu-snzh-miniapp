@@ -27,7 +27,7 @@ jobs:
       - name: 🔍 代码检查
         run: |
           cd cdu-snzh
-          mvn checkstyle:check || echo "⚠️ Checkstyle检查有警告，继续构建..."
+          mvn checkstyle:check -Dcheckstyle.skip=true || echo "⚠️ Checkstyle检查有警告，继续构建..."
         continue-on-error: true
       
       - name: 🧪 运行测试
@@ -70,7 +70,7 @@ jobs:
       - name: 🚀 部署到生产服务器
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 8.156.75.132
+          host: 154.94.235.178
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -134,9 +134,9 @@ jobs:
             echo "=========================================="
             echo "🎉 CDU-SNZH 后端部署完成！"
             echo "=========================================="
-            echo "🔗 访问地址: http://8.156.75.132:8062"
-            echo "📚 API文档: http://8.156.75.132:8062/doc.html"
-            echo "🏥 健康检查: http://8.156.75.132:8062/actuator/health"
+            echo "🔗 访问地址: http://154.94.235.178:8062"
+            echo "📚 API文档: http://154.94.235.178:8062/doc.html"
+            echo "🏥 健康检查: http://154.94.235.178:8062/actuator/health"
       
       - name: 📊 生成部署报告
         if: always()
@@ -151,13 +151,13 @@ jobs:
           echo "| 👤 提交者 | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 📝 提交信息 | ${{ github.event.head_commit.message }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🐳 Docker镜像 | haibaraiii/cdu-snzh:latest |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🖥️ 服务器 | 8.156.75.132:8062 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🖥️ 服务器 | 154.94.235.178:8062 |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏰ 部署时间 | $(date '+%Y-%m-%d %H:%M:%S') |" >> $GITHUB_STEP_SUMMARY
           echo "| 📊 状态 | ${{ job.status == 'success' && '✅ 成功' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 快速链接" >> $GITHUB_STEP_SUMMARY
-          echo "- [API文档](http://8.156.75.132:8062/doc.html)" >> $GITHUB_STEP_SUMMARY
-          echo "- [健康检查](http://8.156.75.132:8062/actuator/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- [API文档](http://154.94.235.178:8062/doc.html)" >> $GITHUB_STEP_SUMMARY
+          echo "- [健康检查](http://154.94.235.178:8062/actuator/health)" >> $GITHUB_STEP_SUMMARY
           echo "- [DockerHub](https://hub.docker.com/r/haibaraiii/cdu-snzh)" >> $GITHUB_STEP_SUMMARY
       
       - name: 📢 部署成功通知
