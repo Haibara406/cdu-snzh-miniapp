@@ -80,7 +80,7 @@ docker logs -f mysql-cdu-snzh
 sleep 30
 
 # 导入SQL文件
-docker exec -i mysql-cdu-snzh mysql -uroot -pWw249260523.. cdu_snzh_miniapp < sql/cdu_snzh_miniapp.sql
+docker exec -i mysql-cdu-snzh mysql -uroot -pWw249260523.. cdu_snzh_miniapp < sql/cdu_snzh.sql
 ```
 
 ### 配置远程访问
@@ -197,4 +197,3 @@ docker exec -it mysql-cdu-snzh mysql -uroot -pWw249260523.. -e "SET GLOBAL innod
 
 **文档版本**: 1.0  
 **创建日期**: 2025-10-13
-

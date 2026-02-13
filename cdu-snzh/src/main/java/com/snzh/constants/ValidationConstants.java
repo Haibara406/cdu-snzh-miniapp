@@ -152,4 +152,9 @@ public class ValidationConstants {
 
     public static final String ADMIN_IDS_NOT_EMPTY = "管理员ID列表不能为空";
 
+    /** 景区签到相关校验 */
+    public static final String CHECKIN_LONGITUDE_NOT_NULL = "签到经度不能为空";
+
+    public static final String CHECKIN_LATITUDE_NOT_NULL = "签到纬度不能为空";
+
 }

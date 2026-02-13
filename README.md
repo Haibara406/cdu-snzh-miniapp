@@ -97,7 +97,7 @@
 
 1. 克隆项目到本地
 2. 修改 `application.yml` 中的配置项，包括数据库连接、Redis 配置、微信小程序密钥等
-3. 执行 `sql/cdu_snzh_miniapp.sql` 脚本初始化数据库
+3. 执行 `sql/cdu_snzh.sql` 脚本初始化数据库
 4. 启动 Redis 和 MinIO 服务
 5. 运行 `CduSnzhApplication.java` 启动应用
 
@@ -134,7 +134,7 @@
 | `ai_chat_message` | AI 客服对话记录 |
 | `ai_chat_session` | AI 会话管理 |
 
-完整的数据库结构文件位于 `sql/cdu_snzh_miniapp.sql`。
+完整的数据库结构文件位于 `sql/cdu_snzh.sql`。
 
 ## 📚 API 文档
 
@@ -172,4 +172,3 @@ https://v0d2kkgn6c.apifox.cn/
 ---
 
 **Made with ❤️ for 蜀南竹海景区**
-

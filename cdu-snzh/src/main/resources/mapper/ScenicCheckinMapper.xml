@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snzh.mapper.ScenicCheckinMapper">
+
+    <!-- 查询用户的勋章收藏（按景点分组） -->
+    <select id="selectBadgeCollection" resultType="com.snzh.domain.vo.BadgeCollectionVO">
+        SELECT
+            spot_id AS spotId,
+            spot_name AS spotName,
+            badge_image_url AS badgeImageUrl,
+            MIN(checkin_time) AS firstCheckinTime,
+            COUNT(*) AS checkinCount
+        FROM scenic_checkin
+        WHERE user_id = #{userId}
+          AND status = 1
+        GROUP BY spot_id, spot_name, badge_image_url
+        ORDER BY firstCheckinTime DESC
+    </select>
+
+    <!-- 分页查询签到历史（带用户信息） -->
+    <select id="selectCheckinHistoryPage" resultType="com.snzh.domain.vo.CheckinHistoryVO">
+        SELECT
+            sc.id,
+            sc.user_id AS userId,
+            au.nickname AS userNickname,
+            sc.spot_name AS spotName,
+            sc.spot_id AS spotId,
+            sc.checkin_time AS checkinTime,
+            sc.badge_image_url AS badgeImageUrl,
+            sc.distance
+        FROM scenic_checkin sc
+        LEFT JOIN app_user au ON sc.user_id = au.id
+        WHERE sc.status = 1
+        <if test="userId != null">
+            AND sc.user_id = #{userId}
+        </if>
+        <if test="spotId != null and spotId != ''">
+            AND sc.spot_id = #{spotId}
+        </if>
+        ORDER BY sc.checkin_time DESC
+    </select>
+
+</mapper>

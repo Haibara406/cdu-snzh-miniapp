@@ -120,3 +120,9 @@ ai:
     session-timeout: 7
     # 是否启用流式响应
     enable-streaming: true
+
+# Dify API 配置（景区签到）
+dify:
+  api:
+    url: ${DIFY_API_URL:http://8.156.89.203:83/v1/workflows/run}
+    key: ${DIFY_API_KEY:app-jBHSROZDAHk1EL2rM9GjLNAJ}
