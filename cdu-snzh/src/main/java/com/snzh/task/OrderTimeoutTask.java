@@ -32,7 +32,7 @@ public class OrderTimeoutTask {
      * 定时扫描并取消超时订单
      * 每5分钟执行一次
      */
-    @Scheduled(cron = "0 */5 * * * ?")
+    //@Scheduled(cron = "0 */5 * * * ?")
     public void cancelExpiredOrders() {
         log.info("========== 开始扫描超时订单 ==========");
         long startTime = System.currentTimeMillis();
@@ -82,7 +82,7 @@ public class OrderTimeoutTask {
      * 定时扫描并完成游玩日期已过的订单
      * 每天凌晨1点执行
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+    //@Scheduled(cron = "0 0 1 * * ?")
     public void completeExpiredVisitOrders() {
         log.info("========== 开始扫描游玩日期已过订单 ==========");
         long startTime = System.currentTimeMillis();
@@ -134,4 +134,3 @@ public class OrderTimeoutTask {
         }
     }
 }
-

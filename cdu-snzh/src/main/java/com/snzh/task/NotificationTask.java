@@ -31,7 +31,7 @@ public class NotificationTask {
      * 发送游玩日期提醒
      * 每天早上9点执行，提醒明天游玩的用户
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    //@Scheduled(cron = "0 0 9 * * ?")
     public void sendVisitDateReminder() {
         log.info("开始执行游玩日期提醒任务");
 
@@ -74,7 +74,7 @@ public class NotificationTask {
      * 发送订单即将过期提醒
      * 每10分钟执行一次，提醒10-20分钟后过期的订单
      */
-    @Scheduled(cron = "0 */10 * * * ?")
+    //@Scheduled(cron = "0 */10 * * * ?")
     public void sendOrderExpireReminder() {
         log.info("开始执行订单即将过期提醒任务");
 
@@ -116,4 +116,3 @@ public class NotificationTask {
         }
     }
 }
-
