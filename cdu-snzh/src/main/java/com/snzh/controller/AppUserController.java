@@ -4,6 +4,7 @@ import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.*;
 import com.snzh.domain.vo.PageVo;
+import com.snzh.domain.vo.RefreshTokenVO;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -65,6 +66,13 @@ public class AppUserController {
             @RequestParam("name") @Length(min = 1, max = 20, message = "照片名称长度为1-20个字符") String name
     ){
         return ResponseResult.success(userService.uploadAvatar(file, name));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "刷新访问令牌", description = "使用刷新令牌获取新的访问令牌")
+    public ResponseResult<RefreshTokenVO> refreshToken(@Valid @RequestBody RefreshTokenDTO refreshTokenDTO) {
+        log.info("用户刷新Token请求");
+        return ResponseResult.success(userService.refreshToken(refreshTokenDTO.getRefreshToken()));
     }
 
 

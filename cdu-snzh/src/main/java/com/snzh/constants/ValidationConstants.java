@@ -157,4 +157,7 @@ public class ValidationConstants {
 
     public static final String CHECKIN_LATITUDE_NOT_NULL = "签到纬度不能为空";
 
+    /** Token相关校验 */
+    public static final String REFRESH_TOKEN_NOT_NULL = "refreshToken不能为空";
+
 }

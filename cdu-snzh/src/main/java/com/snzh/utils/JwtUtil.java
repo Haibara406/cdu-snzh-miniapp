@@ -74,11 +74,35 @@ public class JwtUtil {
     }
 
     /**
-     * 生成 Refresh Token
+     * 生成 Refresh Token（普通用户）
      */
-    public String generateRefreshToken(String userId) {
+    public String generateRefreshToken(String userId, String status) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userType", "USER");
+        claims.put("status", status);
+        
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(userId)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshTokenExpire()))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * 生成 Refresh Token（管理员）
+     */
+    public String generateAdminRefreshToken(String adminId, String username, String status, String roleType) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userType", "ADMIN");
+        claims.put("username", username);
+        claims.put("status", status);
+        claims.put("roleType", roleType);
+        
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(adminId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshTokenExpire()))
                 .signWith(key, SignatureAlgorithm.HS256)

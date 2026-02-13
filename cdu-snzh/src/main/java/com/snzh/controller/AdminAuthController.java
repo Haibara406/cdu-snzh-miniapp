@@ -2,9 +2,10 @@ package com.snzh.controller;
 
 import com.snzh.annotation.RequireAdmin;
 import com.snzh.domain.ResponseResult;
-import com.snzh.domain.dto.AdminLoginDTO;
+import com.snzh.domain.dto.*;
 import com.snzh.domain.vo.AdminInfoVO;
 import com.snzh.domain.vo.AdminLoginVO;
+import com.snzh.domain.vo.RefreshTokenVO;
 import com.snzh.service.IAdminAuthService;
 import com.snzh.threadlocal.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +54,13 @@ public class AdminAuthController {
         Long adminId = Long.valueOf(UserContext.get("userId"));
         log.info("获取管理员信息: adminId={}", adminId);
         return ResponseResult.success(adminAuthService.getCurrentAdminInfo(adminId));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "刷新访问令牌", description = "使用刷新令牌获取新的访问令牌")
+    public ResponseResult<RefreshTokenVO> refreshToken(@Valid @RequestBody RefreshTokenDTO refreshTokenDTO) {
+        log.info("管理员刷新Token请求");
+        return ResponseResult.success(adminAuthService.refreshToken(refreshTokenDTO.getRefreshToken()));
     }
 }
 

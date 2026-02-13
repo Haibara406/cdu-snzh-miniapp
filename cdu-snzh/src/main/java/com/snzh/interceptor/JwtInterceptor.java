@@ -43,7 +43,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         token = token.substring(7);
         String userId;
-        String status = "1";
+        String status;
         String userType;
         String username;
         String roleType;
@@ -60,10 +60,11 @@ public class JwtInterceptor implements HandlerInterceptor {
                 return false;
             }
             if(StatusEnum.STOP.getCode().equals(Integer.valueOf(status))){
+                writeUnauthorized(response, ErrorConst.USER_NOT_EXIST_OR_BANNED);
                 return false;
             }
 
-            // 根据用户类型选择不同的Redis Key
+            // 验证用户是否已登出（检查Redis中是否还有Refresh Token）
             RedisKeyManage redisKey = BusinessConst.UserType.ADMIN.equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
             String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
             if(refreshToken == null){
@@ -84,48 +85,9 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
 
         } catch (ExpiredJwtException e) {
-            // Access Token 过期，尝试使用 Redis 中的 Refresh Token 续签
-            userId = e.getClaims().getSubject();
-            userType = (String) e.getClaims().get("userType");
-            username = (String) e.getClaims().get("username");
-            roleType = (String) e.getClaims().get("roleType");
-            
-            // 根据用户类型选择不同的Redis Key
-            RedisKeyManage redisKey = BusinessConst.UserType.ADMIN.equals(userType) ? RedisKeyManage.ADMIN_LOGIN : RedisKeyManage.USER_LOGIN;
-            String refreshToken = redisCache.get(RedisKeyBuild.createKey(redisKey, userId), String.class);
-            if (refreshToken == null) {
-                writeUnauthorized(response, ErrorConst.TOKEN_EXPIRED);
-                return false;
-            }
-
-            try {
-                // 验证RefreshToken有效性
-                jwtUtil.parseToken(refreshToken);
-                // 根据用户类型生成新的 Access Token
-                String newAccessToken;
-                if (BusinessConst.UserType.ADMIN.equals(userType)) {
-                    newAccessToken = jwtUtil.generateAdminAccessToken(userId, username, status, roleType);
-                } else {
-                    newAccessToken = jwtUtil.generateAccessToken(userId, status);
-                }
-                response.setHeader("New-Access-Token", newAccessToken);
-
-                // 存入 ThreadLocal
-                UserContext.set("userId", userId);
-                UserContext.set("userType", userType);
-                UserContext.set("status", status);
-                if (username != null) {
-                    UserContext.set("username", username);
-                }
-                if (roleType != null) {
-                    UserContext.set("roleType", roleType);
-                }
-                return true;
-
-            } catch (Exception ex) {
-                writeUnauthorized(response, ErrorConst.INVALID_TOKEN);
-                return false;
-            }
+            // Access Token 过期，返回 401，让客户端调用刷新端点
+            writeUnauthorized(response, ErrorConst.TOKEN_EXPIRED);
+            return false;
 
         } catch (JwtException ex) {
             writeUnauthorized(response, ErrorConst.INVALID_TOKEN);

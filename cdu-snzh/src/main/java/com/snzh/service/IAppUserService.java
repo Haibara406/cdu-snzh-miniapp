@@ -1,7 +1,6 @@
 package com.snzh.service;
 
 import com.snzh.constants.ValidationConstants;
-import com.snzh.domain.ResponseResult;
 import com.snzh.domain.dto.UserInfoUpdateDTO;
 import com.snzh.domain.dto.UserSearchDTO;
 import com.snzh.domain.dto.WxLoginDTO;
@@ -9,6 +8,7 @@ import com.snzh.domain.dto.WxPhoneDTO;
 import com.snzh.domain.entity.AppUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.snzh.domain.vo.PageVo;
+import com.snzh.domain.vo.RefreshTokenVO;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -19,7 +19,6 @@ import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 
 /**
  * <p>
@@ -46,4 +45,9 @@ public interface IAppUserService extends IService<AppUser> {
                                       @Max(value = 1, message =  ValidationConstants.INCORRECT_STATUS_VALUE) Integer status);
 
     Boolean uploadAvatar(MultipartFile file, @Length(min = 1, max = 20, message = "照片名称长度为1-20个字符") String name);
+
+    /**
+     * 刷新访问令牌
+     */
+    RefreshTokenVO refreshToken(String refreshToken);
 }

@@ -25,7 +25,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 // 放行登录接口
                 .excludePathPatterns(
                         "/user/wx/login",           // 小程序登录
+                        "/user/refresh",            // 用户刷新Token
                         "/admin/login",             // 管理员登录
+                        "/admin/refresh",           // 管理员刷新Token
                         "/ai/test/**",              // AI测试接口（无需登录）
                         "/swagger-ui/**",           // Swagger UI
                         "/swagger-ui.html",

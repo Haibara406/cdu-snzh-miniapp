@@ -7,6 +7,7 @@ import com.snzh.domain.entity.AdminUser;
 import com.snzh.domain.properties.JwtProperties;
 import com.snzh.domain.vo.AdminInfoVO;
 import com.snzh.domain.vo.AdminLoginVO;
+import com.snzh.domain.vo.RefreshTokenVO;
 import com.snzh.enums.RedisKeyManage;
 import com.snzh.enums.StatusEnum;
 import com.snzh.exceptions.AccountLockedException;
@@ -20,6 +21,7 @@ import com.snzh.service.IAdminAuthService;
 import com.snzh.utils.IpUtils;
 import com.snzh.utils.JwtUtil;
 import com.snzh.utils.PasswordUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +107,12 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
                 String.valueOf(adminUser.getStatus()),
                 String.valueOf(adminUser.getRoleType())
         );
-        String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(adminUser.getId()));
+        String refreshToken = jwtUtil.generateAdminRefreshToken(
+                String.valueOf(adminUser.getId()),
+                adminUser.getUsername(),
+                String.valueOf(adminUser.getStatus()),
+                String.valueOf(adminUser.getRoleType())
+        );
 
         // 7. 存储RefreshToken到Redis
         redisCache.set(
@@ -180,5 +187,59 @@ public class AdminAuthServiceImpl implements IAdminAuthService {
                 .lastLoginIp(adminUser.getLastLoginIp())
                 .build();
     }
-}
 
+    @Override
+    public RefreshTokenVO refreshToken(String refreshToken) {
+        try {
+            // 1. 验证 Refresh Token 的有效性
+            Claims claims = jwtUtil.parseToken(refreshToken);
+            String adminId = claims.getSubject();
+            String userType = claims.get("userType", String.class);
+            String username = claims.get("username", String.class);
+            String status = claims.get("status", String.class);
+            String roleType = claims.get("roleType", String.class);
+
+            // 2. 验证用户类型
+            if (!"ADMIN".equals(userType)) {
+                throw new AdminLoginException(ErrorConst.INVALID_TOKEN);
+            }
+
+            // 3. 验证 Redis 中存储的 Refresh Token 是否匹配
+            String storedRefreshToken = redisCache.get(
+                    RedisKeyBuild.createKey(RedisKeyManage.ADMIN_LOGIN, adminId),
+                    String.class
+            );
+            
+            if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+                throw new AdminLoginException(ErrorConst.TOKEN_EXPIRED);
+            }
+
+            // 4. 检查管理员状态
+            AdminUser adminUser = adminUserMapper.selectById(adminId);
+            if (adminUser == null) {
+                throw new AccountNotFoundException(ErrorConst.ADMIN_NOT_FOUND);
+            }
+            if (StatusEnum.STOP.getCode().equals(adminUser.getStatus())) {
+                throw new AccountLockedException(ErrorConst.ADMIN_ACCOUNT_DISABLED);
+            }
+
+            // 5. 生成新的 Access Token
+            String newAccessToken = jwtUtil.generateAdminAccessToken(
+                    adminId,
+                    username,
+                    status,
+                    roleType
+            );
+
+            log.info("管理员刷新Token成功：adminId={}", adminId);
+
+            return RefreshTokenVO.builder()
+                    .accessToken(newAccessToken)
+                    .build();
+
+        } catch (RuntimeException e) {
+            log.error("管理员刷新Token失败", e);
+            throw new AdminLoginException(ErrorConst.INVALID_TOKEN);
+        }
+    }
+}

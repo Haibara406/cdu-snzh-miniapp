@@ -3,6 +3,7 @@ package com.snzh.service;
 import com.snzh.domain.dto.AdminLoginDTO;
 import com.snzh.domain.vo.AdminInfoVO;
 import com.snzh.domain.vo.AdminLoginVO;
+import com.snzh.domain.vo.RefreshTokenVO;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -26,5 +27,10 @@ public interface IAdminAuthService {
      * 获取当前管理员信息
      */
     AdminInfoVO getCurrentAdminInfo(Long adminId);
+
+    /**
+     * 刷新访问令牌
+     */
+    RefreshTokenVO refreshToken(String refreshToken);
 }
 

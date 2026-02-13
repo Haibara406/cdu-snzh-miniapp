@@ -15,6 +15,7 @@ import com.snzh.domain.dto.WxPhoneDTO;
 import com.snzh.domain.entity.AppUser;
 import com.snzh.domain.properties.JwtProperties;
 import com.snzh.domain.vo.PageVo;
+import com.snzh.domain.vo.RefreshTokenVO;
 import com.snzh.domain.vo.UserInfoVO;
 import com.snzh.domain.vo.UserListVO;
 import com.snzh.domain.vo.WxLoginVO;
@@ -32,6 +33,7 @@ import com.snzh.utils.FileUploadUtils;
 import com.snzh.utils.JwtUtil;
 import com.snzh.utils.PageUtil;
 import com.snzh.utils.StringUtils;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -88,7 +90,7 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
 
             // 若一切正常则生成token
             String accessToken = jwtUtil.generateAccessToken(Long.toString(appUser.getId()), Integer.toString(appUser.getStatus()));
-            String refreshToken = jwtUtil.generateRefreshToken(Long.toString(appUser.getId()));
+            String refreshToken = jwtUtil.generateRefreshToken(Long.toString(appUser.getId()), Integer.toString(appUser.getStatus()));
             redisCache.set(RedisKeyBuild.createKey(RedisKeyManage.USER_LOGIN, appUser.getId()), refreshToken, jwtProperties.getRefreshTokenExpire(), TimeUnit.MILLISECONDS);
 
             return WxLoginVO.builder()
@@ -222,6 +224,54 @@ public class AppUserServiceImpl extends ServiceImpl<AppUserMapper, AppUser> impl
         }catch (Exception e){
             log.error("{}上传出现未知异常", UploadEnum.USER_AVATAR.getDescription(), e);
             return false;
+        }
+    }
+
+    @Override
+    public RefreshTokenVO refreshToken(String refreshToken) {
+        try {
+            // 1. 验证 Refresh Token 的有效性
+            Claims claims = jwtUtil.parseToken(refreshToken);
+            String userId = claims.getSubject();
+            String userType = claims.get("userType", String.class);
+            String status = claims.get("status", String.class);
+
+            // 2. 验证用户类型
+            if (!"USER".equals(userType)) {
+                throw new LoginFailedException(ErrorConst.INVALID_TOKEN);
+            }
+
+            // 3. 验证 Redis 中存储的 Refresh Token 是否匹配
+            String storedRefreshToken = redisCache.get(
+                    RedisKeyBuild.createKey(RedisKeyManage.USER_LOGIN, userId),
+                    String.class
+            );
+            
+            if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+                throw new LoginFailedException(ErrorConst.TOKEN_EXPIRED);
+            }
+
+            // 4. 检查用户状态
+            AppUser appUser = userMapper.selectById(userId);
+            if (appUser == null) {
+                throw new AccountNotFoundException(ErrorConst.ACCOUNT_NOT_FOUND);
+            }
+            if (StatusEnum.STOP.getCode().equals(appUser.getStatus())) {
+                throw new AccountLockedException(ErrorConst.ACCOUNT_LOCKED);
+            }
+
+            // 5. 生成新的 Access Token
+            String newAccessToken = jwtUtil.generateAccessToken(userId, status);
+
+            log.info("用户刷新Token成功：userId={}", userId);
+
+            return RefreshTokenVO.builder()
+                    .accessToken(newAccessToken)
+                    .build();
+
+        } catch (RuntimeException e) {
+            log.error("用户刷新Token失败", e);
+            throw new LoginFailedException(ErrorConst.INVALID_TOKEN);
         }
     }
 }
