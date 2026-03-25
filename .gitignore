@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+.kiro
+*.DS_Store
+
+# 部署配置文件（包含敏感信息）
+deploy.env
+local.env
+.env
+
+# 日志文件
+logs/

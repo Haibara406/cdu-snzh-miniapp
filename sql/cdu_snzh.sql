@@ -11,7 +11,7 @@
  Target Server Version : 80027 (8.0.27)
  File Encoding         : 65001
 
- Date: 13/02/2026 21:45:12
+ Date: 25/03/2026 16:05:51
 */
 
 SET NAMES utf8mb4;
@@ -44,7 +44,7 @@ CREATE TABLE `admin_user` (
 -- Records of admin_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `admin_user` (`id`, `username`, `password`, `real_name`, `phone`, `email`, `avatar`, `role_type`, `status`, `last_login_time`, `last_login_ip`, `create_time`, `update_time`) VALUES (1, 'admin', '$2a$10$lDrCIBYsZUokjwlaKGIahO0.1DJcdvaN9M/LWU8zkCi//2kCxwZTq', '超级管理员', '19180475710', 'haibaraiii@foxmail.com', NULL, 0, 1, '2025-11-06 15:22:57', '142.91.102.35', '2025-10-11 16:23:01', '2025-10-11 17:16:47');
+INSERT INTO `admin_user` (`id`, `username`, `password`, `real_name`, `phone`, `email`, `avatar`, `role_type`, `status`, `last_login_time`, `last_login_ip`, `create_time`, `update_time`) VALUES (1, 'admin', '$2a$10$lDrCIBYsZUokjwlaKGIahO0.1DJcdvaN9M/LWU8zkCi//2kCxwZTq', '超级管理员', '19180475710', 'haibaraiii@foxmail.com', NULL, 0, 1, '2026-03-25 13:08:16', '171.219.50.221', '2025-10-11 16:23:01', '2025-10-11 17:16:47');
 COMMIT;
 
 -- ----------------------------
@@ -65,7 +65,7 @@ CREATE TABLE `ai_chat_message` (
   KEY `idx_role` (`role`) USING BTREE,
   KEY `idx_status` (`status`) USING BTREE,
   KEY `idx_create_time` (`create_time`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=311 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='AI客服消息记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=319 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='AI客服消息记录表';
 
 -- ----------------------------
 -- Records of ai_chat_message
@@ -381,6 +381,14 @@ INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`
 INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (308, '1310d0e053de45ad8b9b4f9a861c98e7', 'AI', '抱歉，我暂时没有相关信息，建议您咨询景区人工客服，来了解相关事宜。', NULL, 1, '2025-12-04 11:47:26', '2025-12-04 11:47:25');
 INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (309, 'b0b8a80cf912459fbf4b5cdda4d28bb8', 'USER', '我想上厕所', NULL, 1, '2026-02-09 19:33:04', '2026-02-09 19:33:03');
 INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (310, 'b0b8a80cf912459fbf4b5cdda4d28bb8', 'AI', '🚻 您好～竹小智来帮您啦！😊\n\n景区内卫生间分布很密集，**最近的公共厕所就在蜀南竹海风景名胜区内（竹海镇区域）**，步行几分钟就能到达～  \n📍 特别推荐您前往：  \n✅ **蜀南竹海-公共厕所（景区内主干道旁）**  \n→ 位置醒目、干净整洁、人流量适中，离翡翠长廊、海中海等热门景点都很近！\n\n✨ 小贴士：  \n- 景区内每1–1.5公里就设有一处卫生间，标识清晰（look for 🚻图标～）  \n- 若您正在游览中，可打开景区小程序 → 点击【电子地图】→ 搜索“卫生间”，实时导航直达哦～\n\n需要我帮您规划附近景点+卫生间+休息点的一站式轻松路线吗？🌿  \n或者您正准备出发？也可以告诉我您的位置/游玩计划，我来为您贴心指路～ 🌟', NULL, 1, '2026-02-09 19:33:04', '2026-02-09 19:33:03');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (311, 'ab086b2298c4414da581c94b208a4711', 'USER', '推荐蜀南竹海的景点', NULL, 1, '2026-03-11 10:25:36', '2026-03-11 10:25:36');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (312, 'ab086b2298c4414da581c94b208a4711', 'AI', '好的！让我为您介绍蜀南竹海的精华景点～ 🌿✨\n\n首先，蜀南竹海拥有**128个景点**，我为您精选了最具代表性的几大必游地：\n\n---\n\n✅ **翡翠长廊**  \n📍 西部主干道旁｜🎫 免费（含在景区大门票内）  \n🌿 700米长的天然竹林隧道，阳光透过竹叶洒下斑驳光影，是《卧虎藏龙》取景地！平缓好走，超适合拍照📷、亲子漫步、老人轻松游～\n\n✅ **七彩飞瀑**  \n📍 竹海中部｜🎫 含在大门票内  \n💦 高约70米的瀑布，晴日阳光折射下常现彩虹🌈，水雾清凉，孩子超爱！观景台视野开阔，台阶不多，贴心照顾长辈。\n\n✅ **仙寓洞**  \n📍 竹海南部｜🎫 含在大门票内  \n🕯️ “竹海明珠”！千年佛道共存石窟，洞内古殿林立，洞外峡谷云海翻涌，文化+自然双体验，建议游玩约1小时。\n\n✅ **海中海**  \n📍 景区腹地｜🎫 含在大门票内  \n🌊 并非大海，而是被竹林环抱的静谧湖泊，湖面如镜倒映翠竹，可泛舟/环湖慢行，是放松身心的绝佳“忘忧角落”。\n\n✅ **青龙湖 & 忘忧谷**（联游推荐）  \n📍 景区东部｜🎫 含在大门票内  \n🛶 青龙湖碧波荡漾，可乘竹筏；忘忧谷溪流潺潺、竹影婆娑，步道平缓幽静，非常适合喜欢自然生态与轻徒步的朋友。\n\n💡小贴士：所有景点均含在**蜀南竹海大门票**中（成人¥100），无需单独购票～  \n📌 想了解某一个景点的详细故事、开放时间或怎么去？欢迎随时告诉我名字，我立刻为您展开讲！\n\n需要我帮您规划一条**专属路线**（比如带娃/陪老人/摄影打卡/自驾一天游）吗？😊', NULL, 1, '2026-03-11 10:25:36', '2026-03-11 10:25:36');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (313, '6c19e939054b42b09bb52cddcd435a70', 'USER', 'hello', NULL, 1, '2026-03-12 09:25:15', '2026-03-12 09:25:15');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (314, '6c19e939054b42b09bb52cddcd435a70', 'AI', '你好呀～欢迎来到蜀南竹海景区！🌿✨  \n我是您的专属AI导游——**竹小智**，活泼又靠谱，懂竹子、懂路线、更懂怎么让您玩得轻松又开心～ 😊  \n\n您是想了解：\n🎫 门票价格 & 开放时间？  \n📍 景点推荐 & 游玩路线？  \n🚗 交通指南 & 停车/充电信息？  \n🌤️ 今天/明天天气如何？  \n还是……已经准备好下单买票啦？ 🛒  \n\n随时告诉我您的需求，我马上为您安排～ 🌟  \n（悄悄说：带老人、孩子，或是爱拍照、爱徒步的朋友，我都能定制专属路线哦～）💚', NULL, 1, '2026-03-12 09:25:15', '2026-03-12 09:25:15');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (315, '522d290aeb504cbfa1033fd162bb32b7', 'USER', '推荐蜀南竹海的景点', NULL, 1, '2026-03-25 13:12:46', '2026-03-25 13:12:46');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (316, '522d290aeb504cbfa1033fd162bb32b7', 'AI', '好的！让我为您介绍蜀南竹海的精华景点～ 🌿✨\n\n首先，蜀南竹海拥有**128个景点**，我为您精选了最具代表性的几大必游地：\n\n---\n\n✅ **翡翠长廊**  \n📍 西部主干道旁｜🎫 免费（含在景区大门票内）  \n🌿 700米长的天然竹林隧道，阳光透过竹叶洒下斑驳光影，是《卧虎藏龙》取景地！平缓好走，超适合拍照📷、亲子漫步、老人轻松游～\n\n✅ **七彩飞瀑**  \n📍 景区东部｜🎫 含在大门票内  \n💦 竹海第一瀑布！雨后常现彩虹，水雾氤氲如仙境。观景台视野开阔，孩子爱看，摄影党狂喜～（温馨提示：近瀑处有少量台阶，老人可驻足高处观景）\n\n✅ **仙寓洞**  \n📍 景区南部｜🎫 含在大门票内  \n🪷 “竹海明珠”！千年佛道共存石窟，洞内清凉幽静，文化+自然双体验。洞外峡谷云雾缭绕，宛如水墨画～（⚠️洞内地面略湿滑，请慢行）\n\n✅ **海中海**  \n📍 景区腹地｜🎫 含在大门票内  \n🌊 名副其实的“竹海中的湖”，湖面如镜倒映翠竹，环湖步道平坦舒缓，是全家休憩、喂鸭子、拍湖景大片的理想地！\n\n✅ **忘忧谷**  \n📍 景区中部｜🎫 含在大门票内  \n🎋 溪流潺潺、古木参天、竹影婆娑，负氧离子爆表！徒步小径清幽怡人，适合放空身心、轻度徒步（全程约1.5km，坡度平缓）\n\n---\n\n💡 **小贴士**：  \n- 所有景点均含在**蜀南竹海大门票**中（成人¥100），无需额外购票；  \n- 建议搭配观光车游览（单程¥20/人），省力又高效；  \n- 若您告诉我游玩时长、是否带老人小孩、自驾还是乘车等，我可以为您**定制专属路线+推荐最近餐厅/卫生间/停车场哦**～ 😊\n\n需要我帮您规划一天行程吗？🌱', NULL, 1, '2026-03-25 13:12:47', '2026-03-25 13:12:46');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (317, '522d290aeb504cbfa1033fd162bb32b7', 'USER', '推荐竹海附近的餐厅', NULL, 1, '2026-03-25 13:13:52', '2026-03-25 13:13:52');
+INSERT INTO `ai_chat_message` (`id`, `session_id`, `role`, `content`, `metadata`, `status`, `create_time`, `update_time`) VALUES (318, '522d290aeb504cbfa1033fd162bb32b7', 'AI', '当然可以！为您推荐**海中海湖畔的2家高颜值、高口碑餐厅**，环境美、菜品香、距离近，特别适合游玩后小憩用餐～ 🍽️✨\n\n---\n\n🌿 **1. 蜀南竹海上府酒店餐厅**  \n📍 就在**海中海湖边，步行约200米（3分钟）**，湖景+竹景双buff！  \n💰 人均 ¥70–90  \n🥘 特色：地道川菜 + **时令竹笋宴**（春笋脆嫩、冬笋醇香，孩子也爱吃～）  \n✅ 优势：环境清幽、有儿童座椅、支持扫码点餐、湖景位需提前预约  \n\n---\n\n🏡 **2. 蜀南竹海陈家院子半岛庭院酒店餐厅**  \n📍 同样紧邻**海中海湖边，步行约300米（5分钟）**，半岛庭院风超有feel～  \n💰 人均 ¥80–100  \n🥘 特色：精品川菜升级版，推荐「竹筒腊味饭」「翡翠竹荪汤」，食材本地直供，鲜到掉眉毛！  \n✅ 优势：庭院错落有致，拍照出片；有遮阳棚/空调包间，晴雨皆宜  \n\n---\n\n💡 **温馨提醒**：  \n⏰ 午餐高峰为 **11:30–13:00**，建议错峰（11:00或13:00后）更清净；  \n🚻 两家餐厅附近均有景区卫生间，步行1分钟内可达；  \n🎋 景区内共12家餐厅，如您偏好其他区域（如翡翠长廊、七彩飞瀑附近），我也可以立刻为您推荐就近选择！\n\n需要我帮您查查这两家餐厅的导航方式，或根据您接下来要去的景点，推荐**步行最近的餐厅**吗？😊', NULL, 1, '2026-03-25 13:13:52', '2026-03-25 13:13:52');
 COMMIT;
 
 -- ----------------------------
@@ -400,7 +408,7 @@ CREATE TABLE `ai_chat_session` (
   KEY `idx_user_id` (`user_id`) USING BTREE,
   KEY `idx_status` (`status`) USING BTREE,
   KEY `idx_create_time` (`create_time`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='AI客服会话表';
+) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='AI客服会话表';
 
 -- ----------------------------
 -- Records of ai_chat_session
@@ -486,8 +494,12 @@ INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`,
 INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (78, '6f946572b66f4f8cbf9e3b69d2a69edd', 999999, '我是坐车过来的，和我的朋友一起来，想去拍...', 0, '2025-11-08 14:11:21', '2025-11-08 14:13:44');
 INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (80, 'd61a87efd2a7463f8401810480968abc', 999999, '明天准备过来玩两天呢，和朋友一起，休闲一...', 0, '2025-11-08 15:08:51', '2025-11-08 15:10:22');
 INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (81, '1310d0e053de45ad8b9b4f9a861c98e7', 3, '请问观云台的构造体现了哪些园林知识', 0, '2025-12-04 11:47:23', '2025-12-04 11:47:26');
-INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (82, '681182629e524386a2b71d1bb6f21d43', 999999, '', 1, '2026-02-02 03:54:23', '2026-02-02 03:54:23');
-INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (83, 'b0b8a80cf912459fbf4b5cdda4d28bb8', 3, '我想上厕所', 1, '2026-02-09 19:32:56', '2026-02-09 19:33:05');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (82, '681182629e524386a2b71d1bb6f21d43', 999999, '', 0, '2026-02-02 03:54:23', '2026-02-02 03:54:23');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (83, 'b0b8a80cf912459fbf4b5cdda4d28bb8', 3, '我想上厕所', 0, '2026-02-09 19:32:56', '2026-02-09 19:33:05');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (84, 'ab086b2298c4414da581c94b208a4711', 3, '推荐蜀南竹海的景点', 1, '2026-03-11 10:25:21', '2026-03-11 10:25:37');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (85, 'ea681bc20bab468995a978f091773d59', 999999, '', 1, '2026-03-12 09:24:59', '2026-03-12 09:24:59');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (86, '6c19e939054b42b09bb52cddcd435a70', 999999, 'hello', 1, '2026-03-12 09:25:06', '2026-03-12 09:25:16');
+INSERT INTO `ai_chat_session` (`id`, `session_id`, `user_id`, `title`, `status`, `create_time`, `update_time`) VALUES (87, '522d290aeb504cbfa1033fd162bb32b7', 3, '推荐蜀南竹海的景点', 1, '2026-03-25 13:12:27', '2026-03-25 13:13:53');
 COMMIT;
 
 -- ----------------------------
@@ -739,6 +751,52 @@ INSERT INTO `facility_type` (`id`, `name`, `status`, `create_time`, `update_time
 COMMIT;
 
 -- ----------------------------
+-- Table structure for friend_session_history
+-- ----------------------------
+DROP TABLE IF EXISTS `friend_session_history`;
+CREATE TABLE `friend_session_history` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `closed_at` datetime(6) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `expire_seconds` int DEFAULT NULL,
+  `item_count` int DEFAULT NULL,
+  `session_id` varchar(36) NOT NULL,
+  `admin_username` varchar(50) NOT NULL,
+  `participant_count` int DEFAULT NULL,
+  `participants` varchar(500) DEFAULT NULL,
+  `user_id` bigint NOT NULL,
+  `items_json` mediumtext,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of friend_session_history
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Table structure for friendships
+-- ----------------------------
+DROP TABLE IF EXISTS `friendships`;
+CREATE TABLE `friendships` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `accepted_at` datetime(6) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `friend_id` bigint NOT NULL,
+  `status` enum('ACCEPTED','BLOCKED','PENDING') NOT NULL,
+  `user_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UKjwaac0iw9d1fu58mx7afwf9f4` (`user_id`,`friend_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of friendships
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
 -- Table structure for notification_record
 -- ----------------------------
 DROP TABLE IF EXISTS `notification_record`;
@@ -882,12 +940,14 @@ CREATE TABLE `scenic_checkin` (
   KEY `idx_spot_id` (`spot_id`),
   KEY `idx_checkin_time` (`checkin_time`),
   KEY `idx_user_spot_time` (`user_id`,`spot_id`,`checkin_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='景区签到记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='景区签到记录表';
 
 -- ----------------------------
 -- Records of scenic_checkin
 -- ----------------------------
 BEGIN;
+INSERT INTO `scenic_checkin` (`id`, `user_id`, `spot_id`, `spot_name`, `checkin_time`, `longitude`, `latitude`, `distance`, `badge_image_url`, `fence_radius`, `status`, `create_time`, `update_time`) VALUES (1, 1, 'shunan_zhuhai_baishoutai', '蜀南竹海-拜寿台', '2026-02-13 22:14:58', '104.985586', '28.451742', '0.0', 'https://pic1.imgdb.cn/item/698bcea130a31bf8f57375f6.png', '300', 1, '2026-02-13 22:14:58', '2026-02-13 22:14:58');
+INSERT INTO `scenic_checkin` (`id`, `user_id`, `spot_id`, `spot_name`, `checkin_time`, `longitude`, `latitude`, `distance`, `badge_image_url`, `fence_radius`, `status`, `create_time`, `update_time`) VALUES (2, 1, 'shunan_zhuhai_baishoutai', '蜀南竹海-拜寿台', '2026-03-13 10:06:20', '104.985586', '28.451742', '0.0', 'https://pic1.imgdb.cn/item/698bcea130a31bf8f57375f6.png', '300', 1, '2026-03-13 10:06:20', '2026-03-13 10:06:19');
 COMMIT;
 
 -- ----------------------------
@@ -1025,6 +1085,48 @@ INSERT INTO `scenic_ticket` (`id`, `scenic_spot_id`, `ticket_type_id`, `price`, 
 INSERT INTO `scenic_ticket` (`id`, `scenic_spot_id`, `ticket_type_id`, `price`, `sold_count`, `status`, `create_time`, `update_time`) VALUES (5, 1, 5, 220.00, 0, 1, '2025-10-07 15:52:35', '2025-10-10 10:01:36');
 INSERT INTO `scenic_ticket` (`id`, `scenic_spot_id`, `ticket_type_id`, `price`, `sold_count`, `status`, `create_time`, `update_time`) VALUES (6, 1, 6, 30.00, 0, 1, '2025-10-07 15:52:35', '2025-10-10 10:01:43');
 INSERT INTO `scenic_ticket` (`id`, `scenic_spot_id`, `ticket_type_id`, `price`, `sold_count`, `status`, `create_time`, `update_time`) VALUES (7, 1, 7, 100.00, 0, 1, '2025-10-10 10:59:37', '2025-10-10 10:59:37');
+COMMIT;
+
+-- ----------------------------
+-- Table structure for space_files
+-- ----------------------------
+DROP TABLE IF EXISTS `space_files`;
+CREATE TABLE `space_files` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_path` varchar(500) DEFAULT NULL,
+  `file_size` bigint DEFAULT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `item_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKgr65d4jmy4a8q2csinporj30d` (`item_id`),
+  CONSTRAINT `FKgr65d4jmy4a8q2csinporj30d` FOREIGN KEY (`item_id`) REFERENCES `space_items` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of space_files
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Table structure for space_items
+-- ----------------------------
+DROP TABLE IF EXISTS `space_items`;
+CREATE TABLE `space_items` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `content` text,
+  `created_at` datetime(6) NOT NULL,
+  `type` enum('FILE','IMAGE','TEXT') NOT NULL,
+  `user_id` bigint NOT NULL,
+  `expire_at` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of space_items
+-- ----------------------------
+BEGIN;
 COMMIT;
 
 -- ----------------------------
