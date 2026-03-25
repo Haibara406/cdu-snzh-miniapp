@@ -36,8 +36,7 @@ build/
 *.DS_Store
 
 # 部署配置文件（包含敏感信息）
-deploy.env
-local.env
+deploy/deploy.env
 .env
 
 # 日志文件

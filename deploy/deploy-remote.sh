@@ -12,7 +12,8 @@ set -e  # 遇到错误立即退出
 
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_DIR"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -42,26 +43,12 @@ log_error() {
 load_config() {
     local config_file=""
 
-    # 优先级：deploy.env > deploy.env.example
+    # 优先级：deploy.env
     if [ -f "$SCRIPT_DIR/deploy.env" ]; then
         config_file="$SCRIPT_DIR/deploy.env"
-        log_info "加载配置文件: deploy.env"
-    elif [ -f "$SCRIPT_DIR/deploy.env.example" ]; then
-        config_file="$SCRIPT_DIR/deploy.env.example"
-        log_warning "使用示例配置文件: deploy.env.example"
-
-        # 询问是否创建 deploy.env
-        read -p "是否创建 deploy.env 配置文件？(y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            cp "$SCRIPT_DIR/deploy.env.example" "$SCRIPT_DIR/deploy.env"
-            log_success "已创建 deploy.env，请编辑后重新运行脚本"
-            log_info "编辑命令: vim deploy.env"
-            exit 0
-        fi
+        log_info "加载配置文件: deploy/deploy.env"
     else
-        log_error "配置文件不存在"
-        log_error "请创建 deploy.env 或 deploy.env.example"
+        log_error "配置文件不存在: deploy/deploy.env"
         exit 1
     fi
 

@@ -2,14 +2,18 @@
 chcp 65001 >nul
 setlocal
 
-REM ==================== Docker Compose 部署脚本 ====================
-REM 适用于 Windows 本地部署
+REM ==================== CDU-SNZH Windows 本地部署脚本 ====================
+REM 使用 Docker Compose 在本地部署所有服务
 REM ================================================================
 
 set "INFO=[94m[INFO][0m"
 set "SUCCESS=[92m[SUCCESS][0m"
 set "WARNING=[93m[WARNING][0m"
 set "ERROR=[91m[ERROR][0m"
+
+REM 获取脚本所在目录
+set SCRIPT_DIR=%~dp0
+cd /d "%SCRIPT_DIR%.."
 
 if "%1"=="" goto :deploy
 if /i "%1"=="deploy" goto :deploy
@@ -26,7 +30,7 @@ goto :help
 
 :deploy
 echo ==========================================
-echo 🚀 CDU-SNZH Docker Compose 部署
+echo 🚀 CDU-SNZH Windows 本地部署
 echo ==========================================
 
 REM 检查 Docker
@@ -39,14 +43,14 @@ if errorlevel 1 (
 )
 echo %SUCCESS% Docker 已安装
 
-REM 检查配置文件（自动使用 .env.example）
+REM 准备配置文件
 if not exist ".env" (
-    if exist ".env.example" (
-        echo %INFO% 使用 .env.example 配置文件
-        copy .env.example .env >nul
-        echo %SUCCESS% 已自动创建 .env 文件
+    if exist "deploy\deploy.env" (
+        echo %INFO% 从 deploy\deploy.env 创建 .env
+        copy deploy\deploy.env .env >nul
+        echo %SUCCESS% 配置文件已准备
     ) else (
-        echo %ERROR% .env.example 文件不存在
+        echo %ERROR% deploy\deploy.env 文件不存在
         exit /b 1
     )
 ) else (
@@ -86,10 +90,9 @@ echo MinIO控制台: http://localhost:9001
 echo ==========================================
 echo.
 echo 💡 常用命令:
-echo   docker-compose logs -f app    # 查看应用日志
-echo   docker-compose ps             # 查看服务状态
-echo   docker-compose stop           # 停止所有服务
-echo   docker-compose down           # 停止并删除容器
+echo   deploy\deploy-local.bat logs app    # 查看应用日志
+echo   deploy\deploy-local.bat status      # 查看服务状态
+echo   deploy\deploy-local.bat stop        # 停止所有服务
 echo ==========================================
 goto :end
 
@@ -134,6 +137,7 @@ set /p response=
 if /i "%response%"=="Y" (
     echo %INFO% 清理所有资源...
     docker-compose down -v
+    if exist ".env" del .env
     echo %SUCCESS% 清理完成
 ) else (
     echo %INFO% 取消清理
@@ -152,31 +156,30 @@ if errorlevel 1 (
 cd ..
 echo %SUCCESS% 镜像构建完成
 echo %INFO% 重启应用容器...
-docker-compose up -d --no-deps --build app
+docker-compose up -d --no-deps app
 echo %SUCCESS% 应用已更新
 goto :end
 
 :help
-echo CDU-SNZH Docker Compose 部署脚本
+echo CDU-SNZH Windows 本地部署脚本
 echo.
-echo 用法: deploy.bat [命令]
+echo 用法: deploy-local.bat [命令]
 echo.
 echo 命令:
 echo   deploy    - 构建镜像并部署所有服务（默认）
 echo   start     - 启动所有服务
 echo   stop      - 停止所有服务
 echo   restart   - 重启所有服务
-echo   logs      - 查看日志（可选服务名，如: deploy.bat logs app）
+echo   logs      - 查看日志（可选服务名）
 echo   status    - 查看服务状态
 echo   build     - 重新构建并更新应用
 echo   clean     - 清理所有容器和数据
 echo   help      - 显示帮助信息
 echo.
 echo 示例:
-echo   deploy.bat              # 首次部署
-echo   deploy.bat logs app     # 查看应用日志
-echo   deploy.bat build        # 更新应用
-echo   deploy.bat clean        # 清理所有数据
+echo   deploy-local.bat              # 首次部署
+echo   deploy-local.bat logs app     # 查看应用日志
+echo   deploy-local.bat build        # 更新应用
 goto :end
 
 :end
